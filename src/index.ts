@@ -1,3 +1,4 @@
+import { EventEmitter } from './components/base/events';
 import './scss/styles.scss';
 
 // добавление или удаление количества товара в корзине
@@ -14,7 +15,8 @@ interface IEventEmiter {
 class BasketModel implements IBasketModel {
 	constructor(protected events: IEventEmiter) {}
 
-	protected _changed() {  // метод генерирующий уведомление об изменении
+	protected _changed() {
+		// метод генерирующий уведомление об изменении
 		this.events.emit('basket:change', { item: Array.from(this.items.keys()) });
 	}
 
@@ -28,19 +30,27 @@ class BasketModel implements IBasketModel {
 	}
 }
 
-// class BasketModel implements IBasketModel {
-// 	items: Map<string, number> = new Map();
+const events = new EventEmitter();
 
-// 	add(id: string): void {
-// 		if (!this.items.has(id)) this.items.set(id, 0); // создаем новый
-// 		this.items.set(id, this.items.get(id)! + 1); // прибавляем количество
-// 	}
-// 	remove(id: string): void {
-// 		if (!this.items.has(id)) return; //если нет, тот и делать с ним нечего
-// 		if (this.items.get(id)! > 0) {  // если есть т больше нуля то
-// 			this.items.set(id, this.items.get(id)! - 1); // уменьшить
-// 			if (this.items.get(id) === 0) this.items.delete(id); // если опустили до нуля то удалить
-// 		}
-// 	}
-// }
+const basket = new BasketModel(events);
 
+events.on('basket:change', (data: { items: string[] }) => {
+	//выводить куда-то
+});
+
+
+//модель товаров находящихся в карзине?
+interface CatalogModel {
+    items: IProduct[];
+    setItems(items; IProduct[]): void;  // чтобы установить после загрузки из апи
+    getProduct(id: string): IProduct;  // чтобы получить при рендере списков
+}
+
+//интерфейс отображения
+interface IViewConstructor {
+    new (constructor: HTMLElement, events?: IEventEmiter): IView; //на выходе контейнер, в него выводить
+}
+
+interface IView {
+    render(data?: object): HTMLElement; // устанавливаем данные, возвращаем контейнер
+}
