@@ -7,6 +7,15 @@ interface IProduct {
     price: number;
 }
 
+interface IOrder {
+    payment: string;
+    email: string;
+    phone: number;
+    address: string;
+    total: number;
+    items: string[];
+}
+
 type TResponseProductList = {
     total: number;
     items: IProduct[];
@@ -14,9 +23,5 @@ type TResponseProductList = {
 
 type TResponseProductItem = IProduct | {error: "NotFound"};
 
-interface IOrder {
-    id: string;
-    total: number;
-}
+type TResponseOrder = {id: string, total: number} | {error: string};
 
-type TResponseOrder = IOrder | {error: string};
