@@ -11,7 +11,7 @@
 - src/pages/index.html — HTML-файл главной страницы
 - src/types/index.ts — файл с типами
 - src/index.ts — точка входа приложения
-- src/styles/styles.scss — корневой файл стилей
+- src/scss/styles.scss — корневой файл стилей
 - src/utils/constants.ts — файл с константами
 - src/utils/utils.ts — файл с утилитами
 
@@ -44,6 +44,8 @@ yarn build
 ## Описание данных
 
 На сервере хранятся продукты, мы их получаем в виде списка. Данный интерфейс описывает свойства этого продукта.
+
+```
 interface IProduct {
     id: string;
     description: string;
@@ -52,25 +54,38 @@ interface IProduct {
     category: string;
     price: number;
 }
- 
-Так же на сервере хранятся заказы. Они описываются интерфейсом IOrder. Он создается когда мы отправляем post на Order и получаем информацию о заказе со своим id и total (итоговая цена).
+```
+
+Интерфейс описывает формат данных, которые сервер возвращает в ответ об успешном заказе.
+
+```
 interface IOrder {
     id: string;
     total: number;
 }
+```
 
 Варианты ответов от сервера:
+
+```
 type TResponseProductList = {
     total: number;
     items: IProduct[];
 }
+```
 
 При запросе списка всех продуктов, состоит из количества подуктов и массива самих продуктов.
 
+```
 type TResponseProductItem = IProduct | {error: "NotFound"};
+```
+
 По id ищет какой-то конкретный продукт или получает ошибку о том что продукт не найден.
 
+```
 type TResponseOrder = IOrder | {error: string};
+```
+
 Получает ответ при создании заказа.
 
 ## Базовый код
@@ -81,21 +96,23 @@ type TResponseOrder = IOrder | {error: string};
 класс EventEmitter
 Позволяет реализовать возможность подписаться на все события или слушать события. Устанавливает слушателя события, снимает его. Создает коллбек триггер, генерирующий событие при вызове.
 
-Компонент Hero отображает контент в виде любого другого произвольного компонента, в частности на странице используется компонент Film, и кнопку действия, используя компонент Button».
-
+```
 class BasketModel{
     items: IProduct[];
     byu: User;
     addProduct(IProduct): void;
     removeItem(IProduct): void;
 }
+```
 
+```
 class User{
     pay: string;
     email: string;
     adress: string;
     phone: number;
 }
+```
 
 ## Компоненты модели данных
 
