@@ -1,4 +1,5 @@
-interface IProduct {
+//cв-ва одного товара
+export interface IProduct {
     id: string;
     description: string;
     image: string;
@@ -7,7 +8,7 @@ interface IProduct {
     price: number;
 }
 
-interface IOrder {
+export interface IOrder {
     payment: string;
     email: string;
     phone: number;
@@ -16,12 +17,18 @@ interface IOrder {
     items: string[];
 }
 
-type TResponseProductList = {
+
+
+//
+export type TResponseProductList = {
     total: number;
     items: IProduct[];
 }
 
-type TResponseProductItem = IProduct | {error: "NotFound"};
+//При запросе списка всех продуктов, состоит из количества подуктов и массива самих продуктов
+export type TResponseProductItem = IProduct | {error: "NotFound"};
 
-type TResponseOrder = {id: string, total: number} | {error: string};
+//По id ищет какой-то конкретный продукт или получает ошибку о том что продукт не найден
+export type TResponseOrder = IOrder | {error: string};
 
+// export type TUser = Pick<IOrder, 'email' | 'phone'>;
