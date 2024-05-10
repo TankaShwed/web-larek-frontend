@@ -6,12 +6,14 @@ import { CatalogView } from './components/CatalogView';
 import { EventEmitter } from './components/base/events';
 import { IBasketModel, IEventEmiter, IProduct, IView } from './types';
 import { API_URL } from './utils/constants';
-import {CardView} from './components/Card';
+import { CardView } from './components/Card';
+import { Modal } from './components/common/Modal';
 
 //инициализация
 const api = new MarketAPI(API_URL);
 
-api.GetProductList()
+api
+	.GetProductList()
 	.then((json) => catalogModel.setItems(json.items))
 	.catch((err) => console.error(err));
 
@@ -21,6 +23,7 @@ const events = new EventEmitter();
 //Catalog
 const catalogModel = new CatalogModel(events);
 const catalogView = new CatalogView(document.querySelector('.gallery'), events);
+const modal = new Modal(document.querySelector('#modal-container'), events);
 
 events.on('catalog:change', (event: { items: IProduct[] }) => {
 	// renderBasket(event.items);
@@ -28,10 +31,12 @@ events.on('catalog:change', (event: { items: IProduct[] }) => {
 });
 
 //Card
-const card = new CardView(document.querySelector('.modal__content'), ()=>{console.log('todo')})
+const card = new CardView(document.querySelector('.modal__content'), () => {
+	console.log('todo');
+});
 events.on('card:click', (event: IProduct) => {
 	// renderBasket(event.items);
-	card.render(event);
+    modal.render({content: card.render(event)});
 });
 
 //Basket

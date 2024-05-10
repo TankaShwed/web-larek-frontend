@@ -21,6 +21,8 @@ export class CardView extends Component<IProduct> {
 		category.textContent = data.category;
 		const title = ensureElement<HTMLSpanElement>('.card__title', wrapper);
 		title.textContent = data.title;
+		const description = ensureElement<HTMLSpanElement>('.card__text', wrapper);
+		description.textContent = data.description;
 		const image = ensureElement<HTMLImageElement>('.card__image', wrapper);
 		image.src = CDN_URL + data.image;
 		const price = ensureElement<HTMLSpanElement>('.card__price', wrapper);
@@ -28,8 +30,7 @@ export class CardView extends Component<IProduct> {
 
 		wrapper.addEventListener('click', this.onAddBasketClick);
 
-		this.container.append(wrapper);
 
-		return this.container;
+		return wrapper;
 	}
 }

@@ -1,9 +1,9 @@
-import {Component} from "../base/Component";
+import {Component} from "../base/component";
 import {ensureElement} from "../../utils/utils";
 import {IEvents} from "../base/events";
 
 interface IModalData {
-    content: HTMLElement;
+    content: HTMLElement ;
 }
 
 export class Modal extends Component<IModalData> {
@@ -32,7 +32,7 @@ export class Modal extends Component<IModalData> {
 
     close() {
         this.container.classList.remove('modal_active');
-        this.content = null;
+        // this.content = null;
         this.events.emit('modal:close');
     }
 
