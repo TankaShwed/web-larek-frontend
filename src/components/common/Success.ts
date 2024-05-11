@@ -1,24 +1,28 @@
-import {Component} from "../base/Component";
-import {ensureElement} from "../../utils/utils";
+import { Component } from '../base/component';
+import { cloneTemplate, ensureElement } from '../../utils/utils';
+import { IEventEmiter } from '../../types';
 
 interface ISuccess {
-    total: number;
+	total: number;
 }
 
-interface ISuccessActions {
-    onClick: () => void;
-}
+export class SuccessView extends Component<ISuccess> {
+	private _discription: HTMLElement;
 
-export class Success extends Component<ISuccess> {
-    protected _close: HTMLElement;
+	constructor(private events: IEventEmiter) {
+		super(cloneTemplate('#success'));
 
-    constructor(container: HTMLElement, actions: ISuccessActions) {
-        super(container);
-
-        this._close = ensureElement<HTMLElement>('.state__action', this.container);
-
-        if (actions?.onClick) {
-            this._close.addEventListener('click', actions.onClick);
-        }
+		const button = ensureElement<HTMLElement>('.order-success__close', this.container);
+		button.addEventListener('click', () => {
+			events.emit('successForm:okClick', {});
+		});
+		this._discription = ensureElement<HTMLElement>(
+			'.order-success__description',
+			this.container
+		);
+	}
+	set total(value: number) {
+        debugger
+        this._discription.textContent = `Списанно ${value} синапсов`;
     }
 }

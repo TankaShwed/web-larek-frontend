@@ -13,7 +13,7 @@ export class MarketAPI extends Api {
 	GetProductItem(id: string): TResponseProductItem {
 		throw 'not implemented yet';
 	}
-	PostOrder(order: IOrder): TResponseOrder {
-		throw 'not implemented yet';
+	PostOrder(order: IOrder): Promise<TResponseOrder> {
+		return this.post('/order', order) as Promise<TResponseOrder>;
 	}
 }

@@ -5,13 +5,11 @@ import { CatalogModel } from './components/model/CatalogModel';
 import { CatalogView } from './components/view/CatalogView';
 import { EventEmitter, IEvents } from './components/base/events';
 import {
-	IBasketModel,
-	IEventEmiter,
 	IOrder,
 	IProduct,
-	IView,
 	TContactsErrors,
 	TPaymentErrors,
+    TResponseOrder,
 } from './types';
 import { API_URL } from './utils/constants';
 import { CardView } from './components/Card';
@@ -20,9 +18,10 @@ import { BasketModel } from './components/model/BasketModel';
 import { ensureElement } from './utils/utils';
 import { BasketView } from './components/view/BasketView';
 import { BasketItemView } from './components/view/BasketItemView';
-import { PaymentForm } from './components/PaymentForm';
+import { PaymentForm } from './components/view/PaymentForm';
 import { ContactsForm } from './components/view/ContactsForm';
 import { Model } from './components/base/model';
+import { SuccessView } from './components/common/Success';
 
 //инициализация
 const api = new MarketAPI(API_URL);
@@ -90,6 +89,7 @@ class OrderModel extends Model<IOrder> {
 const orderModel = new OrderModel(order, events);
 const paymentform = new PaymentForm(events);
 const contactsForm = new ContactsForm(events);
+const successView = new SuccessView(events);
 
 events.on('order:open', () => {
 	modal.render({ content: paymentform.render(order) });
@@ -97,10 +97,33 @@ events.on('order:open', () => {
 
 events.on('card:addToBasket', (product: IProduct) => {
 	basketModel.add(product.id);
+	const ids = Array.from(basketModel.items.keys());
+	order.items = [];
+	order.total = 0;
+	ids.forEach((productId) => {
+		const count = basketModel.items.get(productId);
+		const price = count * catalogModel.getProduct(productId).price;
+		for (let i = 0; i < count; i++) {
+			order.items.push(productId);
+		}
+		order.total = order.total + price;
+	});
 });
 
 events.on('order:submit', () => {
 	modal.render({ content: contactsForm.render(order) });
+});
+
+events.on('contacts:submit', () => {
+	api.PostOrder(order).then((r:TResponseOrder) => {
+        //@ts-ignore
+        successView.total = r.total;
+		modal.render({ content: successView.render(order) });
+	});
+});
+
+events.on('successForm:okClick', () => {
+	modal.close();
 });
 
 // Изменилось одно из полей
