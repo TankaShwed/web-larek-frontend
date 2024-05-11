@@ -1,4 +1,4 @@
-import { ICatalogModel, IEventEmiter, IProduct } from '../types';
+import { ICatalogModel, IEventEmiter, IProduct } from '../../types';
 
 export class CatalogModel implements ICatalogModel {
 	items: IProduct[];

@@ -83,7 +83,10 @@ const config = {
         keep_fnames: true
       }
     })]
-  }
+  },
+  watchOptions: {
+    aggregateTimeout: 3000,
+  },
 };
 
 module.exports = () => {

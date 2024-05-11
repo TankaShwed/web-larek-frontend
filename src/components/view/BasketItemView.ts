@@ -1,6 +1,6 @@
-import { Component } from './base/component';
-import { IEventEmiter, IProduct } from '../types/index';
-import { cloneTemplate, ensureElement } from '../utils/utils';
+import { Component } from '../base/component';
+import { IEventEmiter, IProduct } from '../../types/index';
+import { cloneTemplate, ensureElement } from '../../utils/utils';
 
 export class BasketItemView extends Component<IProduct> {
     private _index: HTMLElement;

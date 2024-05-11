@@ -35,14 +35,33 @@ export interface IBasketModel {
 	remove(id: string): void;
 }
 
+export type TPaymentMethod = 'card' | 'cash';
+
+export type TPaymentErrors = {
+	payment?: string;
+	address?: string;
+};
+
+export type TContactsErrors = {
+	email?: string;
+	phone?: string;
+};
+
 //ORDER
 export interface IOrder {
-	payment: string;
+	payment: TPaymentMethod;
 	email: string;
 	phone: number;
 	address: string;
 	total: number;
 	items: string[];
+	valid: boolean;
+	errors: string[];
+}
+
+export interface IOrderForm {
+	payment: TPaymentMethod;
+	address: string;
 }
 
 //ответ от сервера

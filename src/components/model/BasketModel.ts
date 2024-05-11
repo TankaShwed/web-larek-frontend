@@ -1,6 +1,6 @@
-import { Model } from './base/model';
-import { IBasketModel } from '../types/index';
-import { IEvents } from './base/events';
+import { Model } from '../base/model';
+import { IBasketModel } from '../../types/index';
+import { IEvents } from '../base/events';
 
 export class BasketModel
 	extends Model<{ items: Map<string, number> }>

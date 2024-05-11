@@ -1,17 +1,28 @@
 import './scss/styles.scss';
 
 import { MarketAPI } from './components/MarketAPI';
-import { CatalogModel } from './components/CatalogModel';
-import { CatalogView } from './components/CatalogView';
-import { EventEmitter } from './components/base/events';
-import { IBasketModel, IEventEmiter, IProduct, IView } from './types';
+import { CatalogModel } from './components/model/CatalogModel';
+import { CatalogView } from './components/view/CatalogView';
+import { EventEmitter, IEvents } from './components/base/events';
+import {
+	IBasketModel,
+	IEventEmiter,
+	IOrder,
+	IProduct,
+	IView,
+	TContactsErrors,
+	TPaymentErrors,
+} from './types';
 import { API_URL } from './utils/constants';
 import { CardView } from './components/Card';
 import { Modal } from './components/common/Modal';
-import { BasketModel } from './components/BasketModel';
+import { BasketModel } from './components/model/BasketModel';
 import { ensureElement } from './utils/utils';
-import { BasketView } from './components/BasketView';
-import { BasketItemView } from './components/BasketItemView';
+import { BasketView } from './components/view/BasketView';
+import { BasketItemView } from './components/view/BasketItemView';
+import { PaymentForm } from './components/PaymentForm';
+import { ContactsForm } from './components/view/ContactsForm';
+import { Model } from './components/base/model';
 
 //инициализация
 const api = new MarketAPI(API_URL);
@@ -32,9 +43,9 @@ basketButton.addEventListener('click', () => {
 		content: basketView.render({
 			items: Array.from(basketModel.items.entries()).map((el, ind) => {
 				const basketItemView = new BasketItemView(events);
-                basketItemView.setProduct(catalogModel.getProduct(el[0]))
-                basketItemView.setIndex(ind);
-                basketItemView.setCount(el[1]);
+				basketItemView.setProduct(catalogModel.getProduct(el[0]));
+				basketItemView.setIndex(ind);
+				basketItemView.setCount(el[1]);
 				return basketItemView.render(); // htmlelement
 			}),
 		}),
@@ -46,7 +57,7 @@ api
 	.catch((err) => console.error(err));
 
 events.on('catalog:change', (event: { items: IProduct[] }) => {
-	gallery.append(catalogView.render(event));
+	catalogView.render(event);
 });
 
 const basketModel = new BasketModel(events);
@@ -59,110 +70,91 @@ events.on('card:click', (event: IProduct) => {
 	modal.render({ content: card.render(event) });
 });
 
+const order: IOrder = {
+	payment: 'card',
+	email: '',
+	phone: 0,
+	address: '',
+	total: 0,
+	items: [],
+	valid: false,
+	errors: [],
+};
+
+class OrderModel extends Model<IOrder> {
+	constructor(order: IOrder, events: IEvents) {
+		super(order, events);
+	}
+}
+
+const orderModel = new OrderModel(order, events);
+const paymentform = new PaymentForm(events);
+const contactsForm = new ContactsForm(events);
+
+events.on('order:open', () => {
+	modal.render({ content: paymentform.render(order) });
+});
+
 events.on('card:addToBasket', (product: IProduct) => {
 	basketModel.add(product.id);
 });
 
-//Basket
-// const basketView = new BasketView(document.querySelector('.basket'), events);
-// const basket = new BasketModel(events);
-// class BasketModel implements IBasketModel {
-// 	constructor(protected events: IEventEmiter) {}
-// 	items: Map<string, number>;
+events.on('order:submit', () => {
+	modal.render({ content: contactsForm.render(order) });
+});
 
-// 	protected _changed() {
-// 		// метод генерирующий уведомление об изменении
-// 		this.events.emit('basket:change', { items: Array.from(this.items.keys()) });
-// 	}
+// Изменилось одно из полей
+events.on(/^order\..*:change/, (data: { field: keyof IOrder; value: any }) => {
+	const mixin = { [data.field]: data.value };
+	Object.assign(paymentform, mixin);
+	Object.assign(order, mixin);
+	console.log(data, paymentValidate(), order);
+});
 
-// 	add(id: string): void {
-// 		// ...
-// 		this._changed();
-// 	}
-// 	remove(id: string): void {
-// 		// ...
-// 		this._changed();
-// 	}
-// }
+events.on(
+	/^contacts\..*:change/,
+	(data: { field: keyof IOrder; value: any }) => {
+		const mixin = { [data.field]: data.value };
+		Object.assign(contactsForm, mixin);
+		Object.assign(order, mixin);
+		contactsValidate();
+	}
+);
 
-// class BasketItemView implements IView {
-// 	// элементы внутри контейнера
-// 	protected title: HTMLSpanElement;
-// 	protected addButton: HTMLButtonElement;
-// 	protected removeButton: HTMLButtonElement;
+events.on('paymentFormError:change', (errors) => {
+	const vls = Object.values(errors);
+	const valid = vls.length === 0;
+	Object.assign(paymentform, { valid, errors: vls.join('. ') });
+});
 
-// 	// данные, которые хотим сохранить на будущее
-// 	protected id: string | null = null;
+events.on('contactsFormError:change', (errors) => {
+	const vls = Object.values(errors);
+	const valid = vls.length === 0;
+	console.log('consta form error', vls);
+	Object.assign(contactsForm, { valid, errors: vls.join('. ') });
+});
 
-// 	constructor(
-// 		protected container: HTMLElement,
-// 		protected events: IEventEmiter
-// 	) {
-// 		//инициализируем, чтобы не искать повторно
-// 		this.title = container.querySelector(
-// 			'.basket-item__title'
-// 		) as HTMLSpanElement;
-// 		this.addButton = container.querySelector(
-// 			'.basket-item__add'
-// 		) as HTMLButtonElement;
-// 		this.removeButton = container.querySelector(
-// 			'.basket-item__remove'
-// 		) as HTMLButtonElement;
+function paymentValidate() {
+	const errors: TPaymentErrors = {};
+	if (!order.payment) {
+		errors.payment = 'Необходимо указать способ оплаты';
+	}
+	if (!order.address) {
+		errors.address = 'Необходимо указать адрес';
+	}
+	console.log(errors);
+	events.emit('paymentFormError:change', errors);
+	return Object.keys(errors).length === 0;
+}
 
-// 		//устанавливаем события
-// 		this.addButton.addEventListener('click', () => {
-// 			//генерируем событие в нашем брокере
-// 			this.events.emit('ui:basket-add', { id: this.id });
-// 		});
-
-// 		this.addButton.addEventListener('click', () => {
-// 			this.events.emit('ui:basket-remove', { id: this.id });
-// 		});
-// 	}
-
-// 	render(data: { id: string; title: string }) {
-// 		if (data) {
-// 			this.id = data.id; //если есть новые данные; то запоминаем их
-// 			this.title.textContent = data.title; //и выведем в интерфейс
-// 		}
-// 		return this.container;
-// 	}
-// }
-
-// class BasketView implements IView {
-// 	constructor(protected container: HTMLElement) {}
-// 	render(data: { item: HTMLElement[] }) {
-// 		if (data) {
-// 			this.container.replaceChildren(...data.item);
-// 		}
-// 		return this.container;
-// 	}
-// }
-
-//можно собрать в функции или классе отдельные экраны с логикой их формирования
-// function renderBasket(items: string[]) {
-//     basketView.render(
-//         items.map(id => {
-//             const itemView = new BasketItemView(events);
-//             return itemView.render(catalogModel.getProduct(id));
-//         })
-//     );
-// }
-
-// //при изменении рендерим
-// events.on('basket:change', (event: { items: string[] }) => {
-// 	// renderBasket(event.items);
-// });
-
-// events.on('basket:change', (data: { items: string[] }) => {
-// 	//выводить куда-то
-// });
-
-// //при действия изменяем модель, а после этого случится рендер
-// events.on('ui:basket-add', (event: { id: string }) => {
-// 	basketModel.add(event.id);
-// });
-
-// events.on('ui:basket-remove', (event: { id: string }) => {
-// 	basketModel.remove(event.id);
-// });
+function contactsValidate() {
+	const errors: TContactsErrors = {};
+	if (!order.email) {
+		errors.email = 'Необходимо указать email';
+	}
+	if (!order.phone) {
+		errors.phone = 'Необходимо указать телефон';
+	}
+	events.emit('contactsFormError:change', errors);
+	return Object.keys(errors).length === 0;
+}
