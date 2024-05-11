@@ -15,6 +15,6 @@ export class CatalogModel implements ICatalogModel {
         this._changed();
 	}
 	getProduct(id: string): IProduct {
-		throw new Error('Method not implemented.');
+		return this.items.find(p=>p.id == id);
 	}
 }

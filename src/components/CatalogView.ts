@@ -7,7 +7,7 @@ export class CatalogView extends Component<{ items: IProduct[] }> {
 	constructor(
 		private events: IEventEmiter
 	) {
-		super(cloneTemplate('#card-catalog'));
+		super(ensureElement('.gallery'));
 	}
 
 	render(data?: Partial<{ items: IProduct[] }>): HTMLElement {

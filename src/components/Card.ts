@@ -6,31 +6,27 @@ import { Component } from './base/component';
 export class CardView extends Component<IProduct> {
 	template: HTMLTemplateElement;
 	constructor(
-		protected readonly container: HTMLElement,
-		protected onAddBasketClick: ()=>void
+		protected events: IEventEmiter
 	) {
-		super(container);
-		this.template = ensureElement<HTMLTemplateElement>('#card-preview');
+		super(cloneTemplate('#card-preview'));
 	}
 
 	render(data: IProduct): HTMLElement {
-		this.container.textContent = '';
 
-		const wrapper = cloneTemplate<HTMLButtonElement>(this.template);
-		const category = ensureElement<HTMLSpanElement>('.card__category', wrapper);
+		const category = ensureElement<HTMLSpanElement>('.card__category', this.container);
 		category.textContent = data.category;
-		const title = ensureElement<HTMLSpanElement>('.card__title', wrapper);
+		const title = ensureElement<HTMLSpanElement>('.card__title', this.container);
 		title.textContent = data.title;
-		const description = ensureElement<HTMLSpanElement>('.card__text', wrapper);
+		const description = ensureElement<HTMLSpanElement>('.card__text', this.container);
 		description.textContent = data.description;
-		const image = ensureElement<HTMLImageElement>('.card__image', wrapper);
+		const image = ensureElement<HTMLImageElement>('.card__image', this.container);
 		image.src = CDN_URL + data.image;
-		const price = ensureElement<HTMLSpanElement>('.card__price', wrapper);
+		const price = ensureElement<HTMLSpanElement>('.card__price', this.container);
 		price.textContent = data.price + ' синпасов';
+		const button = ensureElement<HTMLSpanElement>('.card__button', this.container);
+		button.addEventListener('click', ()=>this.events.emit('card:addToBasket', data));
 
-		wrapper.addEventListener('click', this.onAddBasketClick);
 
-
-		return wrapper;
+		return this.container;
 	}
 }

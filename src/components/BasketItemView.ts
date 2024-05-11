@@ -1,53 +1,26 @@
-import {Component} from "./base/component";
-import {cloneTemplate, createElement, ensureElement, formatNumber} from "../utils/utils";
-import {EventEmitter} from "./base/events";
+import { Component } from './base/component';
+import { IEventEmiter, IProduct } from '../types/index';
+import { cloneTemplate, ensureElement } from '../utils/utils';
 
-interface IBasketView {
-    items: HTMLElement[];
-    total: number;
-    selected: string[];
-}
+export class BasketItemView extends Component<IProduct> {
+    private _index: HTMLElement;
+    private _title: HTMLElement;
+    private _price: HTMLElement;
 
-export class BasketView extends Component<IBasketView> {
-    protected _list: HTMLElement;
-    protected _total: HTMLElement;
-    protected _button: HTMLElement;
-
-    constructor(protected events: EventEmitter) {
-        super(cloneTemplate('#basket'));
-
-        this._list = ensureElement<HTMLElement>('.basket__list', this.container);
-        this._total = ensureElement<HTMLElement>('.basket__total', this.container);
-        this._button = ensureElement<HTMLElement>('.basket__action', this.container);
-
-        if (this._button) {
-            this._button.addEventListener('click', () => {
-                events.emit('order:open');
-            });
-        }
-
-        this.items = [];
+	constructor(protected events: IEventEmiter, ) {
+		super(cloneTemplate('#card-basket'));
+        this._index = ensureElement<HTMLElement>('.basket__item-index', this.container);
+        this._title = ensureElement<HTMLElement>('.card__title', this.container);
+        this._price = ensureElement<HTMLElement>('.card__price', this.container);
+	}
+    setProduct(product: IProduct){
+        this._title.textContent = product.title;
+        this._price.textContent = product.price + ' синапсов';
     }
-
-    set items(items: HTMLElement[]) {
-        if (items.length) {
-            this._list.replaceChildren(...items);
-        } else {
-            this._list.replaceChildren(createElement<HTMLParagraphElement>('p', {
-                textContent: 'Корзина пуста'
-            }));
-        }
+    setIndex(index: number){
+        this._index.textContent = index + '';
     }
+    setCount(index: number){
 
-    set selected(items: string[]) {
-        if (items.length) {
-            this.setDisabled(this._button, false);
-        } else {
-            this.setDisabled(this._button, true);
-        }
-    }
-
-    set total(total: number) {
-        this.setText(this._total, formatNumber(total));
     }
 }

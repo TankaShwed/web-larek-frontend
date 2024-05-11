@@ -8,9 +8,10 @@ import { IBasketModel, IEventEmiter, IProduct, IView } from './types';
 import { API_URL } from './utils/constants';
 import { CardView } from './components/Card';
 import { Modal } from './components/common/Modal';
-import { BasketModel} from './components/BasketModel';
+import { BasketModel } from './components/BasketModel';
 import { ensureElement } from './utils/utils';
-// import { BasketItemView} from './components/BasketItemView';
+import { BasketView } from './components/BasketView';
+import { BasketItemView } from './components/BasketItemView';
 
 //инициализация
 const api = new MarketAPI(API_URL);
@@ -20,31 +21,49 @@ const events = new EventEmitter();
 
 //Catalog
 const catalogModel = new CatalogModel(events);
-const catalogView = new CatalogView( events);
+const catalogView = new CatalogView(events);
 const modal = new Modal(document.querySelector('#modal-container'), events);
-const gallery = ensureElement<HTMLDivElement>('.gallery')
+const gallery = ensureElement<HTMLDivElement>('.gallery');
+const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
+const basketView = new BasketView(events);
 
+basketButton.addEventListener('click', () => {
+	modal.render({
+		content: basketView.render({
+			items: Array.from(basketModel.items.entries()).map((el, ind) => {
+				const basketItemView = new BasketItemView(events);
+                basketItemView.setProduct(catalogModel.getProduct(el[0]))
+                basketItemView.setIndex(ind);
+                basketItemView.setCount(el[1]);
+				return basketItemView.render(); // htmlelement
+			}),
+		}),
+	});
+});
 api
 	.GetProductList()
 	.then((json) => catalogModel.setItems(json.items))
 	.catch((err) => console.error(err));
 
-
 events.on('catalog:change', (event: { items: IProduct[] }) => {
 	gallery.append(catalogView.render(event));
 });
 
+const basketModel = new BasketModel(events);
+
 //Card
-const card = new CardView(document.querySelector('.modal__content'), () => {
-	console.log('todo');
-});
+const card = new CardView(events);
+
 events.on('card:click', (event: IProduct) => {
 	// renderBasket(event.items);
-    modal.render({content: card.render(event)});
+	modal.render({ content: card.render(event) });
+});
+
+events.on('card:addToBasket', (product: IProduct) => {
+	basketModel.add(product.id);
 });
 
 //Basket
-const basketModel = new BasketModel(events);
 // const basketView = new BasketView(document.querySelector('.basket'), events);
 // const basket = new BasketModel(events);
 // class BasketModel implements IBasketModel {
