@@ -1,10 +1,6 @@
 import { Component } from '../base/component';
 import { cloneTemplate, ensureElement } from '../../utils/utils';
-import { IEventEmiter } from '../../types';
-
-interface ISuccess {
-	total: number;
-}
+import { IEventEmiter, ISuccess } from '../../types';
 
 export class SuccessView extends Component<ISuccess> {
 	private _discription: HTMLElement;

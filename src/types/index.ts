@@ -1,3 +1,5 @@
+import { ApiListResponse } from "../components/base/api";
+
 //cв-ва одного товара
 export interface IProduct {
 	id: string;
@@ -11,6 +13,41 @@ export interface IProduct {
 export interface IEventEmiter {
 	emit: (event: string, data: unknown) => void;
 }
+
+export interface IFormState {
+    valid: boolean;
+    errors: string[];
+}
+
+export interface IModalData {
+    content: HTMLElement ;
+}
+
+export interface ISuccess {
+	total: number;
+}
+
+export interface IBasketView {
+    items: HTMLElement[];
+    total: number;
+    selected: string[];
+}
+
+export interface IEvents {
+	on<T extends object>(event: EventName, callback: (data: T) => void): void;
+	emit<T extends object>(event: string, data?: T): void;
+	trigger<T extends object>(
+		event: string,
+		context?: Partial<T>
+	): (data: T) => void;
+}
+
+export type EventName = string | RegExp;
+export type Subscriber = Function;
+export type EmitterEvent = {
+	eventName: string;
+	data: unknown;
+};
 
 //PRODUCTS(CATALOG)
 export interface ICatalogModel {
@@ -56,10 +93,7 @@ export interface IOrderForm {
 }
 
 //ответ от сервера
-export type TResponseProductList = {
-	total: number;
-	items: IProduct[];
-};
+export type TResponseProductList = ApiListResponse<IProduct>;
 
 //При запросе списка всех продуктов, состоит из количества подуктов и массива самих продуктов
 export type TResponseProductItem = IProduct | { error: 'NotFound' };

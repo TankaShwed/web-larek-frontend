@@ -4,9 +4,7 @@ import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { CDN_URL } from '../../utils/constants';
 
 export class CatalogView extends Component<{ items: IProduct[] }> {
-	constructor(
-		private events: IEventEmiter
-	) {
+	constructor(private events: IEventEmiter) {
 		super(ensureElement('.gallery'));
 	}
 
@@ -27,7 +25,7 @@ export class CatalogView extends Component<{ items: IProduct[] }> {
 			price.textContent = product.price + ' синпасов';
 
 			wrapper.addEventListener('click', () => {
-				this.events.emit('card:click', product );
+				this.events.emit('card:click', product);
 			});
 
 			this.container.append(wrapper);

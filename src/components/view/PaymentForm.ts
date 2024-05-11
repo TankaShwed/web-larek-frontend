@@ -1,11 +1,7 @@
 import { Form } from '../common/Form';
 import { IOrderForm, TPaymentMethod } from '../../types';
-import { EventEmitter, IEvents } from '../base/events';
-import {
-	cloneTemplate,
-	ensureAllElements,
-	ensureElement,
-} from '../../utils/utils';
+import { IEvents } from '../../types';
+import { cloneTemplate, ensureAllElements } from '../../utils/utils';
 
 export class PaymentForm extends Form<IOrderForm> {
 	protected _paymentButtons: HTMLButtonElement[];

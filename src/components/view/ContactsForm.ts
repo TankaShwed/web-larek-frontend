@@ -1,6 +1,6 @@
 import { Form } from '../common/Form';
 import { IOrderForm } from '../../types';
-import { IEvents } from '../base/events';
+import { IEvents } from '../../types';
 import { cloneTemplate } from '../../utils/utils';
 
 export class ContactsForm extends Form<IOrderForm> {

@@ -3,16 +3,17 @@ import './scss/styles.scss';
 import { MarketAPI } from './components/MarketAPI';
 import { CatalogModel } from './components/model/CatalogModel';
 import { CatalogView } from './components/view/CatalogView';
-import { EventEmitter, IEvents } from './components/base/events';
+import { EventEmitter } from './components/base/events';
+import { IEvents } from './types';
 import {
 	IOrder,
 	IProduct,
 	TContactsErrors,
 	TPaymentErrors,
-    TResponseOrder,
+	TResponseOrder,
 } from './types';
 import { API_URL } from './utils/constants';
-import { CardView } from './components/view/Card';
+import { CardView } from './components/view/CardView';
 import { Modal } from './components/common/Modal';
 import { BasketModel } from './components/model/BasketModel';
 import { ensureElement } from './utils/utils';
@@ -50,6 +51,7 @@ basketButton.addEventListener('click', () => {
 		}),
 	});
 });
+
 api
 	.GetProductList()
 	.then((json) => catalogModel.setItems(json.items))
@@ -115,9 +117,9 @@ events.on('order:submit', () => {
 });
 
 events.on('contacts:submit', () => {
-	api.PostOrder(order).then((r:TResponseOrder) => {
-        //@ts-ignore
-        successView.total = r.total;
+	api.PostOrder(order).then((r: TResponseOrder) => {
+		//@ts-ignore
+		successView.total = r.total;
 		modal.render({ content: successView.render(order) });
 	});
 });
