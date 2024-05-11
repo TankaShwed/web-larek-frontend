@@ -12,15 +12,6 @@ export interface IEventEmiter {
 	emit: (event: string, data: unknown) => void;
 }
 
-//интерфейс отображения
-export interface IViewConstructor {
-	new (constructor: HTMLElement, events?: IEventEmiter): IView; //на выходе контейнер, в него выводить
-}
-
-export interface IView {
-	render(data?: object): HTMLElement; // устанавливаем данные, возвращаем контейнер
-}
-
 //PRODUCTS(CATALOG)
 export interface ICatalogModel {
 	items: IProduct[];
@@ -75,5 +66,3 @@ export type TResponseProductItem = IProduct | { error: 'NotFound' };
 
 //По id ищет какой-то конкретный продукт или получает ошибку о том что продукт не найден
 export type TResponseOrder = { id: string; total: number } | { error: string };
-
-// export type TUser = Pick<IOrder, 'email' | 'phone'>;

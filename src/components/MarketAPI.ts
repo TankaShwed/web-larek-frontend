@@ -10,7 +10,7 @@ export class MarketAPI extends Api {
 	GetProductList(): Promise<TResponseProductList> {
 		return this.get('/product/') as Promise<TResponseProductList>;
 	}
-	GetProductItem(id: string): TResponseProductItem {
+	GetProductItem(id: string): Promise<TResponseProductItem> {
 		throw 'not implemented yet';
 	}
 	PostOrder(order: IOrder): Promise<TResponseOrder> {

@@ -12,7 +12,7 @@ import {
     TResponseOrder,
 } from './types';
 import { API_URL } from './utils/constants';
-import { CardView } from './components/Card';
+import { CardView } from './components/view/Card';
 import { Modal } from './components/common/Modal';
 import { BasketModel } from './components/model/BasketModel';
 import { ensureElement } from './utils/utils';

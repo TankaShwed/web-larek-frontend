@@ -1,7 +1,7 @@
-import { IEventEmiter, IProduct } from '../types';
-import { CDN_URL } from '../utils/constants';
-import { cloneTemplate, ensureElement } from '../utils/utils';
-import { Component } from './base/component';
+import { IEventEmiter, IProduct } from '../../types';
+import { CDN_URL } from '../../utils/constants';
+import { cloneTemplate, ensureElement } from '../../utils/utils';
+import { Component } from '../base/component';
 
 export class CardView extends Component<IProduct> {
 	template: HTMLTemplateElement;

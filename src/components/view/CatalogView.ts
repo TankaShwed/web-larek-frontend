@@ -10,7 +10,7 @@ export class CatalogView extends Component<{ items: IProduct[] }> {
 		super(ensureElement('.gallery'));
 	}
 
-	render(data?: Partial<{ items: IProduct[] }>): HTMLElement {
+	render(data?: { items: IProduct[] }): HTMLElement {
 		this.container.textContent = '';
 		data.items.forEach((product) => {
 			const wrapper = cloneTemplate<HTMLButtonElement>('#card-catalog');
