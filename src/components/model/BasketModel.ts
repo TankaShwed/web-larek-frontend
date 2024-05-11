@@ -2,8 +2,7 @@ import { Model } from '../base/model';
 import { IBasketModel } from '../../types/index';
 import { IEvents } from '../../types';
 
-export class BasketModel
-	extends Model<{ items: Map<string, number> }>
+export class BasketModel extends Model<{ items: Map<string, number> }>
 	implements IBasketModel
 {
 	items: Map<string, number>;

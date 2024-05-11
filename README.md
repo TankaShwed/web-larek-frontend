@@ -59,27 +59,228 @@ yarn build
 
 6 Модальное окно: заказ оформлен. Есть кнопка: за новыми покупками (переход на главную).
 
-В проекте используется архитектурный паттерн MVP
+## Базовый код
 
-## Данные
+1 класс Api
 
-Название товара, описание товара, цена товара, категория товара, изображение товара, способ оплаты, адрес доставки, почта, телефон.
+В конструктор принимеается базовый урл. Класс имеет методы get и post, которые делают запросы на сервер. Предпологается что наследник будет вызывать get и post с указанием конкретного uri и передавать данные.
 
-Объекты: 
+```
+class Api {
+	readonly baseUrl: string;
+	protected options: RequestInit;
+	constructor(baseUrl: string, options: RequestInit = {}) 
+	protected handleResponse(response: Response): Promise<object> 
+	get(uri: string) 
+	post(uri: string, data: object, method: ApiPostMethods = 'POST') 
+}
+```
 
-- Товар. Действия: выбор способа оплаты и адреса.
+2 класс Component<T>
 
-- Данные покупателя. Действия: указание почты и телефона, очистка данных.
+Код в конструкторе исполняется до всех объявлений в дочернем классе.
+Абстрактный класс для компонентов отображения(view), является дженериком, принимает контейнер является корневым DOM элементом разметки за которую отвечает конкретный компонент отоброжения, то есть от него наследуются все компоненты отображения.
+Имеет инструменты для работы с DOM в компонентах:
+    - setText устанавливает текстовое содержимое
+setDisabled, sethidden, setvisible,setImage, render).
 
-Коллекции: 
+```
+abstract class Component<T> {
+	protected constructor(protected readonly container: HTMLElement)
+	toggleClass(element: HTMLElement, className: string, force?: boolean)
+	protected setText(element: HTMLElement, value: unknown)
+	setDisabled(element: HTMLElement, state: boolean) 
+	protected setHidden(element: HTMLElement) 
+	protected setVisible(element: HTMLElement) 
+	protected setImage(element: HTMLImageElement, src: string, alt?: string) 
+	render(data?: Partial<T>): HTMLElement 
+}
 
-- Каталог товаров. Действия: заполнить каталог, получить каталог.
+```
 
-- Корзина с товарами. Действия: добавлять в корзину, удалять из корзины, очищать корзину, получить список товаров.
+3 класс EventEmitter
+
+Реализует паттерн «Наблюдатель» и позволяет подписываться на события и уведомлять подписчиков о наступлении события.
+Класс имеет методы on ,  off ,  emit  — для подписки на событие, отписки от события и уведомления подписчиков о наступлении события соответственно.
+Дополнительно реализованы методы  onAll и  offAll  — для подписки на все события и сброса всех подписчиков.
+Интересным дополнением является метод  trigger , генерирующий заданное событие с заданными аргументами. Это позволяет передавать его в качестве обработчика события в другие классы. Эти классы будут генерировать события, не будучи при этом напрямую зависимыми от класса  EventEmitter . 
+События идентифицируется по строке. Строка содержит описание инициатора события и действия которое произошло. Например если на форме с атрибуттом "name" происходит изменения поля ввода "email" тогда стригериться события "contacts.email:change".
+
+```
+class EventEmitter implements IEvents {
+	_events: Map<EventName, Set<Subscriber>>
+	constructor() 
+	on<T extends object>(eventName: EventName, callback: (event: T) => void) 
+	off(eventName: EventName, callback: Subscriber) 
+	emit<T extends object>(eventName: string, data?: T) 
+	onAll(callback: (event: EmitterEvent) => void) 
+	offAll() 
+	trigger<T extends object>(eventName: string, context?: Partial<T>) 
+}
+```
+
+4 класс Model<T> 
+
+Является базовым классом для моделей. Нужен чтобы получить данные и уведомлять что данные поменялись.
+Абстрактный класс является дженериком и принимает в переменной T тип данных в
+конструктор.
+
+```
+abstract class Model<T> {
+	constructor(data: Partial<T>, protected events: IEvents)
+	emitChanges(event: string, payload?: object) 
+}
+```
+
+## Компоненты модели данных (бизнес-логика)
+
+1 класс BasketModel
+
+Содержит id товаров, которые были добавлены в корзину и их количество.
+Реализует интерфейс IBasketModel. Наследуется от Model.
+
+Ключевые методы: add, remove - позволяет добавить товар и убавить.
+
+```
+class BasketModel extends Model<{ items: Map<string, number> }>
+    implements IBasketModel
+	items: Map<string, number>;
+	constructor(events: IEvents)
+	add(id: string): void
+	remove(id: string): void
+}
+```
+
+2 класс CatalogModel
+
+Содержит продукты полученные с сервера.
+Реализует интерфейс ICatalogModel.
+
+Ключевые методы: setItems, getProduct - позволяют получить продукт по id этого продукта, он тригерит события в момент выставления items, по факту когда придут данные с сервера.
+
+```
+class CatalogModel implements ICatalogModel {
+	items: IProduct[];
+	constructor(protected events: IEventEmiter)
+	protected _changed() 
+	setItems(items: IProduct[]): void 
+	getProduct(id: string): IProduct 
+}
+```
+3 объект Order
+
+Хранит только данные о контактах и о способах платежа и адрессе. Так же в него агрегируются продукты из корзины, и далле это используется для создания заказа на сервере.
+
+## Коммуникация
+
+класс MarketAPI
+
+Слой коммуникации с сервером который находится перед слоем модели
+
+```
+class MarketAPI extends Api {
+	GetProductList(): Promise<TResponseProductList> 
+	GetProductItem(id: string): Promise<TResponseProductItem> 
+	PostOrder(order: IOrder): Promise<TResponseOrder> 
+}
+```
+
+## Компоненты представления
+
+1 класс BasketItemView
+
+Используется для отображения строчки товара в списке товаров в корзине. Генерит события при нажатии удаления товара. 
+
+```
+class BasketItemView extends Component<IProduct> {
+    private _index: HTMLElement;
+    private _title: HTMLElement;
+    private _price: HTMLElement;
+	constructor(protected events: IEventEmiter, )
+    setProduct(product: IProduct)
+    setIndex(index: number)
+    setCount(index: number)
+}
+```
+
+2 класс BasketView
+
+Отображение корзины целиком. Получает массив срендеренных элементов от BasketItemView. 
+Ловит нажатие кнопки оформить заказ. Тригерит событие оформления заказа.
+
+```
+export class BasketView extends Component<IBasketView> {
+	protected _list: HTMLElement;
+	protected _total: HTMLElement;
+	protected _button: HTMLElement;
+	constructor(protected events: EventEmitter)
+	set items(items: HTMLElement[])
+	set selected(items: string[])
+	set total(total: number)
+}
+```
+
+3 класс CardView
+
+Отображает одну открытую карточку и ловит событие добавить в корзину. Будет использоваться в модальном окне. 
+
+```
+class CardView extends Component<IProduct> {
+    protected _category: HTMLElement;
+	protected _title: HTMLElement;
+	protected _description: HTMLElement;
+    protected _image: HTMLElement;
+	protected _price: HTMLElement;
+	constructor(protected events: IEventEmiter)
+	set category(value: string)
+	set title(value: string)
+    set description(value: string)
+    set image(value: string)
+    set price(value: number)
+}
+```
+
+4 класс CatalogView
+
+Отображается на главной странице. Переопределяем рендер из базового класса так чтобы шаблон дублировать для каждого item. Ловит события нажатия на карточку.
+
+```
+class CatalogView extends Component<{ items: IProduct[] }> {
+	constructor(private events: IEventEmiter) 
+	render(data?: { items: IProduct[] }): HTMLElement
+}
+```
+
+5 класс ContactsForm
+
+Отображает модальное окно с вводом контактов заказчика: email, phone.
+
+```
+class ContactsForm extends Form<IOrderForm> {
+	protected _email: HTMLInputElement;
+	protected _phone: HTMLInputElement;
+	constructor(events: IEvents) 
+	set adress(value: string) 
+	set email(value: string) 
+}
+
+```
+
+6 класс PaymentForm
+
+Отображает модальное окно с вводом адреса заказчика и выбором способа оплаты (card/cash). 
+
+```
+class PaymentForm extends Form<IOrderForm> {
+	protected _paymentButtons: HTMLButtonElement[];
+	protected _address: HTMLInputElement;
+	constructor(events: IEvents) 
+	set adress(value: string) 
+	set payment(value: TPaymentMethod)
+}
+```
 
 ## Базовые интерфейсы и типы
-
-Интерфейс IProduct описывает свойства одного товара.
 
 ```
 interface IProduct {
@@ -92,12 +293,78 @@ interface IProduct {
 }
 ```
 
-Интерфейс IOrder описывает формат данных, которые сервер возвращает в ответ об успешном заказе и сумму заказа.
-
 ```
 interface IOrder {
     id: string;
     total: number;
+}
+```
+
+```
+interface IOrderForm {
+	payment: TPaymentMethod;
+	address: string;
+}
+```
+
+```
+interface IEventEmiter {
+	emit: (event: string, data: unknown) => void;
+}
+```
+
+```
+interface IFormState {
+    valid: boolean;
+    errors: string[];
+}
+```
+
+```
+interface IModalData {
+    content: HTMLElement ;
+}
+```
+
+```
+interface ISuccess {
+	total: number;
+}
+```
+
+
+```
+interface IBasketView {
+    items: HTMLElement[];
+    total: number;
+    selected: string[];
+}
+```
+
+```
+interface IEvents {
+	on<T extends object>(event: EventName, callback: (data: T) => void): void;
+	emit<T extends object>(event: string, data?: T): void;
+	trigger<T extends object>(
+		event: string,
+		context?: Partial<T>
+	): (data: T) => void;
+}
+```
+
+```
+interface ICatalogModel {
+	items: IProduct[];
+	setItems(items: IProduct[]): void; // чтобы установить после загрузки из апи
+	getProduct(id: string): IProduct; // чтобы получить при рендере списков
+}
+```
+
+```
+interface IBasketModel {
+	items: Map<string, number>;
+	add(id: string): void;
+	remove(id: string): void;
 }
 ```
 
@@ -122,73 +389,23 @@ type TResponseProductItem = IProduct | {error: "NotFound"};
 type TResponseOrder = IOrder | {error: string};
 ```
 
-Получает ответ при создании заказа.
-
-## Базовые компоненты
-
-- api
-
-В конструктор принимеается базовый урл. Класс имеет методы get и post. Делают запросы на сервер.
-
-- component
-
-Код в конструкторе исполняется до всех объявлений в дочернем классе.
-Базовый класс для компонентов отображения(view)
-Имеет инструменты для работы с DOM в дочерних компонентах (setText, setDisabled, sethidden, setvisible,setImage, render).
-
-- events
-
-Позволяет реализовать возможность подписаться на все события или слушать события. Устанавливает слушателя события, снимает его. Создает коллбек триггер, генерирующий событие при вызове.
-
-- model 
-
-Модель, чтобы можно было отличить ее от простых объектов с данными
-
-
-
-## Компоненты
-
-- класс MarketApi
-
-Есть метод, через который получает список продуктов и создает заказ, по id продукта получает сам продуцкт. Он будет наследоваться от класса  API, который умеет слать запросы.
-
-- Карточка товара. Данные: название товара, описание товара, цена товара, категория товара, изображение товара.
-
-class ProductComponent
-
-Содержит ссылки на элементы в html-файле, куда будет вписывать значения и содержать методы выставления этих значений.
-
-- Корзина. Данные: список товаров (с названием товара и ценой), итоговая сумма.
-
-class BasketComponent
-
-Содержит данные про то, где лежит ссылка в html файле чтобы отобразить этот элемент на экране
-
-class BasketModel 
-
-Содержит данные про то, какие товары и что есть в карзине
-
 ```
-class BasketModel{
-    items: IProduct[];
-    byu: User;
-    addProduct(IProduct): void;
-    removeItem(IProduct): void;
-}
+type EventName = string | RegExp;
+type Subscriber = Function;
+type EmitterEvent = {
+	eventName: string;
+	data: unknown;
+};
+
+type TPaymentMethod = 'card' | 'cash';
+
+type TPaymentErrors = {
+	payment?: string;
+	address?: string;
+};
+
+type TContactsErrors = {
+	email?: string;
+	phone?: string;
+};
 ```
-- класс UserForm
-
-Данные: способ оплаты, адрес доставки, почта, телефон.
-Базовый компонент для способа оплаты и пользователя.
-
-```
-class User{
-    pay: string;
-    email: string;
-    adress: string;
-    phone: number;
-}
-```
-
-
-Процессы в приложении реализованы через события. В index.ts мы подписываемся на события в компонентах и будем обновлять модели корзины и пользователя и включать и выключать компоненты.

@@ -42,13 +42,6 @@ export interface IEvents {
 	): (data: T) => void;
 }
 
-export type EventName = string | RegExp;
-export type Subscriber = Function;
-export type EmitterEvent = {
-	eventName: string;
-	data: unknown;
-};
-
 //PRODUCTS(CATALOG)
 export interface ICatalogModel {
 	items: IProduct[];
@@ -62,18 +55,6 @@ export interface IBasketModel {
 	add(id: string): void;
 	remove(id: string): void;
 }
-
-export type TPaymentMethod = 'card' | 'cash';
-
-export type TPaymentErrors = {
-	payment?: string;
-	address?: string;
-};
-
-export type TContactsErrors = {
-	email?: string;
-	phone?: string;
-};
 
 //ORDER
 export interface IOrder {
@@ -100,3 +81,22 @@ export type TResponseProductItem = IProduct | { error: 'NotFound' };
 
 //По id ищет какой-то конкретный продукт или получает ошибку о том что продукт не найден
 export type TResponseOrder = { id: string; total: number } | { error: string };
+
+export type EventName = string | RegExp;
+export type Subscriber = Function;
+export type EmitterEvent = {
+	eventName: string;
+	data: unknown;
+};
+
+export type TPaymentMethod = 'card' | 'cash';
+
+export type TPaymentErrors = {
+	payment?: string;
+	address?: string;
+};
+
+export type TContactsErrors = {
+	email?: string;
+	phone?: string;
+};
