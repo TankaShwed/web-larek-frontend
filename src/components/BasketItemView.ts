@@ -1,6 +1,6 @@
-import {Component} from "../base/component";
-import {cloneTemplate, createElement, ensureElement, formatNumber} from "../../utils/utils";
-import {EventEmitter} from "../base/events";
+import {Component} from "./base/component";
+import {cloneTemplate, createElement, ensureElement, formatNumber} from "../utils/utils";
+import {EventEmitter} from "./base/events";
 
 interface IBasketView {
     items: HTMLElement[];
@@ -8,13 +8,13 @@ interface IBasketView {
     selected: string[];
 }
 
-export class Basket extends Component<IBasketView> {
+export class BasketView extends Component<IBasketView> {
     protected _list: HTMLElement;
     protected _total: HTMLElement;
     protected _button: HTMLElement;
 
-    constructor(container: HTMLElement, protected events: EventEmitter) {
-        super(container);
+    constructor(protected events: EventEmitter) {
+        super(cloneTemplate('#basket'));
 
         this._list = ensureElement<HTMLElement>('.basket__list', this.container);
         this._total = ensureElement<HTMLElement>('.basket__total', this.container);

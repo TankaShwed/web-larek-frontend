@@ -4,19 +4,16 @@ import { cloneTemplate, ensureElement } from '../utils/utils';
 import { CDN_URL } from '../utils/constants';
 
 export class CatalogView extends Component<{ items: IProduct[] }> {
-	template: HTMLTemplateElement;
 	constructor(
-		protected readonly container: HTMLElement,
 		private events: IEventEmiter
 	) {
-		super(container);
-		this.template = ensureElement<HTMLTemplateElement>('#card-catalog');
+		super(cloneTemplate('#card-catalog'));
 	}
 
 	render(data?: Partial<{ items: IProduct[] }>): HTMLElement {
 		this.container.textContent = '';
 		data.items.forEach((product) => {
-			const wrapper = cloneTemplate<HTMLButtonElement>(this.template);
+			const wrapper = cloneTemplate<HTMLButtonElement>('#card-catalog');
 			const category = ensureElement<HTMLSpanElement>(
 				'.card__category',
 				wrapper

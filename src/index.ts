@@ -8,26 +8,30 @@ import { IBasketModel, IEventEmiter, IProduct, IView } from './types';
 import { API_URL } from './utils/constants';
 import { CardView } from './components/Card';
 import { Modal } from './components/common/Modal';
+import { BasketModel} from './components/BasketModel';
+import { ensureElement } from './utils/utils';
+// import { BasketItemView} from './components/BasketItemView';
 
 //инициализация
 const api = new MarketAPI(API_URL);
-
-api
-	.GetProductList()
-	.then((json) => catalogModel.setItems(json.items))
-	.catch((err) => console.error(err));
 
 //Presenter
 const events = new EventEmitter();
 
 //Catalog
 const catalogModel = new CatalogModel(events);
-const catalogView = new CatalogView(document.querySelector('.gallery'), events);
+const catalogView = new CatalogView( events);
 const modal = new Modal(document.querySelector('#modal-container'), events);
+const gallery = ensureElement<HTMLDivElement>('.gallery')
+
+api
+	.GetProductList()
+	.then((json) => catalogModel.setItems(json.items))
+	.catch((err) => console.error(err));
+
 
 events.on('catalog:change', (event: { items: IProduct[] }) => {
-	// renderBasket(event.items);
-	catalogView.render(event);
+	gallery.append(catalogView.render(event));
 });
 
 //Card
@@ -40,8 +44,8 @@ events.on('card:click', (event: IProduct) => {
 });
 
 //Basket
-// const basketModel = new BasketModel(events);
-// const basketView = new BasketView(document.querySelector('.basket'));
+const basketModel = new BasketModel(events);
+// const basketView = new BasketView(document.querySelector('.basket'), events);
 // const basket = new BasketModel(events);
 // class BasketModel implements IBasketModel {
 // 	constructor(protected events: IEventEmiter) {}
