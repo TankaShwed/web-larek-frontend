@@ -8,8 +8,8 @@ export class BasketView extends Component<IBasketView> {
 	protected _total: HTMLElement;
 	protected _button: HTMLElement;
 
-	constructor(protected events: EventEmitter) {
-		super(cloneTemplate('#basket'));
+	constructor(protected container: HTMLElement, protected events: EventEmitter) {
+		super(container);
 
 		this._list = ensureElement<HTMLElement>('.basket__list', this.container);
 		this._total = ensureElement<HTMLElement>('.basket__price', this.container);

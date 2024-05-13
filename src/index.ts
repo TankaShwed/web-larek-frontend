@@ -16,7 +16,7 @@ import { API_URL } from './utils/constants';
 import { CardView } from './components/view/CardView';
 import { Modal } from './components/common/Modal';
 import { BasketModel } from './components/model/BasketModel';
-import { ensureElement } from './utils/utils';
+import { cloneTemplate, ensureElement } from './utils/utils';
 import { BasketView } from './components/view/BasketView';
 import { BasketItemView } from './components/view/BasketItemView';
 import { PaymentForm } from './components/view/PaymentForm';
@@ -36,17 +36,23 @@ const catalogView = new CatalogView(events);
 const modal = new Modal(document.querySelector('#modal-container'), events);
 const gallery = ensureElement<HTMLDivElement>('.gallery');
 const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
-const basketView = new BasketView(events);
+const basketView = new BasketView(cloneTemplate('#basket'), events);
 
 basketButton.addEventListener('click', () => {
 	modal.render({
 		content: basketView.render({
-			items: Array.from(basketModel.items.entries()).map((el, ind) => {
-				const basketItemView = new BasketItemView(events);
-				basketItemView.setProduct(catalogModel.getProduct(el[0]));
-				basketItemView.setIndex(ind);
-				basketItemView.setCount(el[1]);
-				return basketItemView.render(); // htmlelement
+			items: Array.from(basketModel.items.values()).map((el, ind) => {
+				const product = catalogModel.getProduct(el);
+				const basketItemView = new CardView(
+					cloneTemplate('#card-basket'),
+					events,
+					() => 0
+				);
+				return basketItemView.render({
+					index: ind + 1,
+					price: product.price,
+					title: product.title,
+				}); // htmlelement
 			}),
 		}),
 	});
@@ -64,10 +70,12 @@ events.on('catalog:change', (event: { items: IProduct[] }) => {
 const basketModel = new BasketModel(events);
 
 //Card
-const card = new CardView(events);
 
 events.on('card:click', (event: IProduct) => {
 	// renderBasket(event.items);
+	const card = new CardView(cloneTemplate('#card-preview'), events, () => {
+		basketModel.add(event.id);
+	});
 	modal.render({ content: card.render(event) });
 });
 
@@ -97,17 +105,12 @@ events.on('order:open', () => {
 	modal.render({ content: paymentform.render(order) });
 });
 
-events.on('card:addToBasket', (product: IProduct) => {
-	basketModel.add(product.id);
-	const ids = Array.from(basketModel.items.keys());
+events.on('basket:change', (items: Set<string>) => {
+	const ids = Array.from(items.values());
 	order.items = [];
 	order.total = 0;
 	ids.forEach((productId) => {
-		const count = basketModel.items.get(productId);
-		const price = count * catalogModel.getProduct(productId).price;
-		for (let i = 0; i < count; i++) {
-			order.items.push(productId);
-		}
+		const price = catalogModel.getProduct(productId).price;
 		order.total = order.total + price;
 	});
 });
