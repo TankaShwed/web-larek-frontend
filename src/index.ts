@@ -73,10 +73,11 @@ const basketModel = new BasketModel(events);
 
 events.on('card:click', (event: IProduct) => {
 	// renderBasket(event.items);
-	const card = new CardView(cloneTemplate('#card-preview'), events, () => {
+	const cardView
+     = new CardView(cloneTemplate('#card-preview'), events, () => {
 		basketModel.add(event.id);
 	});
-	modal.render({ content: card.render(event) });
+	modal.render({ content: cardView.render(event) });
 });
 
 const order: IOrder = {
