@@ -30,7 +30,7 @@ export interface ISuccess {
 export interface IBasketView {
     items: HTMLElement[];
     total: number;
-    selected: string[];
+    valid: boolean;
 }
 
 export interface IEvents {

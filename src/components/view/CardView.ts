@@ -43,8 +43,12 @@ export class CardView extends Component<IProduct & { index?: number }> {
 		this.setText(this._title, value);
 	}
 
-	set price(value: number) {
-		this.setText(this._price, `${value} синапсов`);
+	set price(value: number | null) {
+		if (value === null) {
+			this.setText(this._price , 'бесценно')
+		} else {
+			this.setText(this._price, `${value} синапсов`);
+		}
 	}
 
 	set description(value: string) {

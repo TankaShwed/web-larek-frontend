@@ -23,32 +23,41 @@ import { ContactsForm } from './components/view/ContactsForm';
 import { Model } from './components/base/model';
 import { SuccessView } from './components/common/Success';
 
-//инициализация
 const api = new MarketAPI(API_URL);
-
-//Presenter
 const events = new EventEmitter();
-
-//Catalog
 const catalogModel = new CatalogModel(events);
 const catalogView = new CatalogView(events);
 const modal = new Modal(document.querySelector('#modal-container'), events);
 const gallery = ensureElement<HTMLDivElement>('.gallery');
 const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
 const basketView = new BasketView(cloneTemplate('#basket'), events);
-
+const basketModel = new BasketModel(events);
+const paymentform = new PaymentForm(events);
+const contactsForm = new ContactsForm(events);
+const successView = new SuccessView(events);
+const order: IOrder = {
+	payment: 'card',
+	email: '',
+	phone: 0,
+	address: '',
+	total: 0,
+	items: [],
+	valid: false,
+	errors: [],
+};
 const renderBasket = () => {
 	modal.render({
 		content: basketView.render({
-            total: order.total,
+			total: order.total,
+            valid: basketModel.validation(catalogModel),
 			items: Array.from(basketModel.items.values()).map((el, ind) => {
 				const product = catalogModel.findProductById(el);
 				const basketItemView = new CardView(
 					cloneTemplate('#card-basket'),
 					events,
 					() => {
-                        basketModel.remove(product.id)
-                    }
+						basketModel.remove(product.id);
+					}
 				);
 				return basketItemView.render({
 					index: ind + 1,
@@ -58,7 +67,7 @@ const renderBasket = () => {
 			}),
 		}),
 	});
-}
+};
 
 basketButton.addEventListener('click', renderBasket);
 
@@ -81,35 +90,12 @@ events.on('catalog:change', (event: { items: IProduct[] }) => {
 	catalogView.render({ items: itms });
 });
 
-const basketModel = new BasketModel(events);
-
-//Card
-
 events.on('card:click', (event: IProduct) => {
 	// renderBasket(event.items);
 	const cardView = new CardView(cloneTemplate('#card-preview'), events, () => {
 		basketModel.add(event.id);
 	});
 	modal.render({ content: cardView.render(event) });
-});
-
-const order: IOrder = {
-	payment: 'card',
-	email: '',
-	phone: 0,
-	address: '',
-	total: 0,
-	items: [],
-	valid: false,
-	errors: [],
-};
-
-const paymentform = new PaymentForm(events);
-const contactsForm = new ContactsForm(events);
-const successView = new SuccessView(events);
-
-events.on('order:open', () => {
-	modal.render({ content: paymentform.render(order) });
 });
 
 events.on('basket:change', (items: Set<string>) => {
@@ -121,11 +107,7 @@ events.on('basket:change', (items: Set<string>) => {
 		order.total = order.total + price;
 		order.items.push(productId);
 	});
-    renderBasket();
-});
-
-events.on('order:submit', () => {
-	modal.render({ content: contactsForm.render(order) });
+	renderBasket();
 });
 
 events.on('contacts:submit', () => {
@@ -140,7 +122,14 @@ events.on('successForm:okClick', () => {
 	modal.close();
 });
 
-// Изменилось одно из полей
+events.on('order:open', () => {
+	modal.render({ content: paymentform.render(order) });
+});
+
+events.on('order:submit', () => {
+	modal.render({ content: contactsForm.render(order) });
+});
+
 events.on(/^order\..*:change/, (data: { field: keyof IOrder; value: any }) => {
 	const mixin = { [data.field]: data.value };
 	Object.assign(paymentform, mixin);
