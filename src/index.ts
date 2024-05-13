@@ -37,25 +37,30 @@ const gallery = ensureElement<HTMLDivElement>('.gallery');
 const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
 const basketView = new BasketView(cloneTemplate('#basket'), events);
 
-basketButton.addEventListener('click', () => {
+const renderBasket = () => {
 	modal.render({
 		content: basketView.render({
+            total: order.total,
 			items: Array.from(basketModel.items.values()).map((el, ind) => {
 				const product = catalogModel.findProductById(el);
 				const basketItemView = new CardView(
 					cloneTemplate('#card-basket'),
 					events,
-					() => 0
+					() => {
+                        basketModel.remove(product.id)
+                    }
 				);
 				return basketItemView.render({
 					index: ind + 1,
 					price: product.price,
 					title: product.title,
-				}); // htmlelement
+				});
 			}),
 		}),
 	});
-});
+}
+
+basketButton.addEventListener('click', renderBasket);
 
 api
 	.GetProductList()
@@ -116,6 +121,7 @@ events.on('basket:change', (items: Set<string>) => {
 		order.total = order.total + price;
 		order.items.push(productId);
 	});
+    renderBasket();
 });
 
 events.on('order:submit', () => {
