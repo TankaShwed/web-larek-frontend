@@ -18,7 +18,6 @@ import { Modal } from './components/common/Modal';
 import { BasketModel } from './components/model/BasketModel';
 import { cloneTemplate, ensureElement } from './utils/utils';
 import { BasketView } from './components/view/BasketView';
-import { BasketItemView } from './components/view/BasketItemView';
 import { PaymentForm } from './components/view/PaymentForm';
 import { ContactsForm } from './components/view/ContactsForm';
 import { Model } from './components/base/model';
@@ -64,7 +63,14 @@ api
 	.catch((err) => console.error(err));
 
 events.on('catalog:change', (event: { items: IProduct[] }) => {
-	catalogView.render(event);
+    const itms= event.items.map(product=>{
+        const cardView
+         = new CardView(cloneTemplate('#card-catalog'), events, () => {
+            events.emit('card:click', product);
+        });
+        return cardView.render(product);
+    })
+	catalogView.render({items: itms});
 });
 
 const basketModel = new BasketModel(events);
@@ -113,6 +119,7 @@ events.on('basket:change', (items: Set<string>) => {
 	ids.forEach((productId) => {
 		const price = catalogModel.getProduct(productId).price;
 		order.total = order.total + price;
+        order.items.push(productId);
 	});
 });
 

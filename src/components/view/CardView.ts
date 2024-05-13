@@ -1,9 +1,6 @@
 import { IEventEmiter, IProduct } from '../../types';
 import { CDN_URL } from '../../utils/constants';
-import {
-	ensureElement,
-	SelectorElement,
-} from '../../utils/utils';
+import { ensureElement, SelectorElement } from '../../utils/utils';
 import { Component } from '../base/component';
 
 const customeEnsureElement = <T extends HTMLElement>(
@@ -82,7 +79,9 @@ export class CardView extends Component<IProduct & { index?: number }> {
 			'.basket__item-index',
 			this.container
 		);
-		this._button = ensureElement<HTMLButtonElement>('button', this.container);
+		this._button =
+			customeEnsureElement<HTMLButtonElement>('button', this.container) ||
+			this.container;
 		this._button.addEventListener('click', onClick);
 	}
 }
