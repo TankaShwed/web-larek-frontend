@@ -51,7 +51,7 @@ export interface ICatalogModel {
 
 //BASKET
 export interface IBasketModel {
-	items: Map<string, number>;
+	items: Set<string>;
 	add(id: string): void;
 	remove(id: string): void;
 }
