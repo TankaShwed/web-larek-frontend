@@ -15,6 +15,21 @@ const customeEnsureElement = <T extends HTMLElement>(
 	}
 };
 
+type TCategoryClassPostfix =
+	| 'other'
+	| 'soft'
+	| 'button'
+	| 'additional'
+	| 'hard';
+
+const categoryMap: { [key: string]: TCategoryClassPostfix } = {
+	'софт-скил': 'soft',
+	другое: 'other',
+	дополнительное: 'additional',
+	кнопка: 'button',
+	'хард-скил': 'hard',
+};
+
 export class CardView extends Component<IProduct & { index?: number }> {
 	private _index?: HTMLElement;
 	private _title: HTMLElement;
@@ -37,8 +52,15 @@ export class CardView extends Component<IProduct & { index?: number }> {
 	}
 
 	set category(value: string) {
-		if (this._category) this.setText(this._category, value);
-		// todo: сделать разные цвета категорий
+		if (!this._category) return;
+		this.setText(this._category, value);
+		Object.keys(categoryMap).forEach((k) => {
+			this.toggleClass(
+				this._category,
+				'card__category_' + categoryMap[k],
+				value == k
+			);
+		});
 	}
 
 	set image(value: string) {

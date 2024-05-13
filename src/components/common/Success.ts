@@ -3,7 +3,7 @@ import { cloneTemplate, ensureElement } from '../../utils/utils';
 import { IEventEmiter, ISuccess } from '../../types';
 
 export class SuccessView extends Component<ISuccess> {
-	private _discription: HTMLElement;
+	private description: HTMLElement;
 
 	constructor(private events: IEventEmiter) {
 		super(cloneTemplate('#success'));
@@ -12,13 +12,13 @@ export class SuccessView extends Component<ISuccess> {
 		button.addEventListener('click', () => {
 			events.emit('successForm:okClick', {});
 		});
-		this._discription = ensureElement<HTMLElement>(
+		this.description = ensureElement<HTMLElement>(
 			'.order-success__description',
 			this.container
 		);
 	}
+
 	set total(value: number) {
-        debugger
-        this._discription.textContent = `Списанно ${value} синапсов`;
+        this.setText(this.description, `Списанно ${value} синапсов`);
     }
 }

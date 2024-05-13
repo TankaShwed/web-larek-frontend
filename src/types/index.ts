@@ -45,8 +45,7 @@ export interface IEvents {
 //PRODUCTS(CATALOG)
 export interface ICatalogModel {
 	items: IProduct[];
-	setItems(items: IProduct[]): void; // чтобы установить после загрузки из апи
-	getProduct(id: string): IProduct; // чтобы получить при рендере списков
+	findProductById(id: string): IProduct; // чтобы получить при рендере списков
 }
 
 //BASKET

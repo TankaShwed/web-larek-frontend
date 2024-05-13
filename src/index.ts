@@ -41,7 +41,7 @@ basketButton.addEventListener('click', () => {
 	modal.render({
 		content: basketView.render({
 			items: Array.from(basketModel.items.values()).map((el, ind) => {
-				const product = catalogModel.getProduct(el);
+				const product = catalogModel.findProductById(el);
 				const basketItemView = new CardView(
 					cloneTemplate('#card-basket'),
 					events,
@@ -59,18 +59,21 @@ basketButton.addEventListener('click', () => {
 
 api
 	.GetProductList()
-	.then((json) => catalogModel.setItems(json.items))
+	.then((json) => (catalogModel.items = json.items))
 	.catch((err) => console.error(err));
 
 events.on('catalog:change', (event: { items: IProduct[] }) => {
-    const itms= event.items.map(product=>{
-        const cardView
-         = new CardView(cloneTemplate('#card-catalog'), events, () => {
-            events.emit('card:click', product);
-        });
-        return cardView.render(product);
-    })
-	catalogView.render({items: itms});
+	const itms = event.items.map((product) => {
+		const cardView = new CardView(
+			cloneTemplate('#card-catalog'),
+			events,
+			() => {
+				events.emit('card:click', product);
+			}
+		);
+		return cardView.render(product);
+	});
+	catalogView.render({ items: itms });
 });
 
 const basketModel = new BasketModel(events);
@@ -79,8 +82,7 @@ const basketModel = new BasketModel(events);
 
 events.on('card:click', (event: IProduct) => {
 	// renderBasket(event.items);
-	const cardView
-     = new CardView(cloneTemplate('#card-preview'), events, () => {
+	const cardView = new CardView(cloneTemplate('#card-preview'), events, () => {
 		basketModel.add(event.id);
 	});
 	modal.render({ content: cardView.render(event) });
@@ -97,13 +99,6 @@ const order: IOrder = {
 	errors: [],
 };
 
-class OrderModel extends Model<IOrder> {
-	constructor(order: IOrder, events: IEvents) {
-		super(order, events);
-	}
-}
-
-const orderModel = new OrderModel(order, events);
 const paymentform = new PaymentForm(events);
 const contactsForm = new ContactsForm(events);
 const successView = new SuccessView(events);
@@ -117,9 +112,9 @@ events.on('basket:change', (items: Set<string>) => {
 	order.items = [];
 	order.total = 0;
 	ids.forEach((productId) => {
-		const price = catalogModel.getProduct(productId).price;
+		const price = catalogModel.findProductById(productId).price;
 		order.total = order.total + price;
-        order.items.push(productId);
+		order.items.push(productId);
 	});
 });
 
