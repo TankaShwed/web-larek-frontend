@@ -30,6 +30,7 @@ export class Application {
 	private successView: SuccessView;
 	private modal: Modal;
 	private basketView: BasketView;
+    private busketCount: HTMLElement;
 
 	constructor(private events: IEventEmiter & IEvents) {
 		this.catalogModel = new CatalogModel(events);
@@ -40,6 +41,7 @@ export class Application {
 		this.paymentForm = new PaymentForm(events);
 		this.contactsForm = new ContactsForm(events);
 		this.successView = new SuccessView(events);
+        this.busketCount = ensureElement<HTMLSpanElement>('.header__basket-counter');
 
 		this.modal = new Modal(
 			ensureElement<HTMLElement>('#modal-container'),
@@ -56,6 +58,7 @@ export class Application {
 	}
 
 	renderBasket() {
+        this.busketCount.textContent = this.basketModel.items.size + '';
 		return this.basketView.render({
 			total: this.basketModel.getTotal(this.catalogModel),
 			valid: this.basketModel.validation(this.catalogModel),
@@ -160,7 +163,7 @@ export class Application {
 			valid: errors.length == 0,
 		});
 	}
-    
+
 	updateContacts(field: keyof IContacts, value: any) {
 		const mixin = { [field]: value };
 		Object.assign(this.contactsModel, mixin);
