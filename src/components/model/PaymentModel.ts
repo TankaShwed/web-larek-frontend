@@ -31,7 +31,6 @@ export class PaymentModel extends Model<IPayment> {
 
 	set address(value: string) {
 		this._address = value;
-        debugger
 		this.emitChanges('payment:change');
 	}
 
