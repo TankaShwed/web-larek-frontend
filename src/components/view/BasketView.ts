@@ -1,5 +1,10 @@
 import { Component } from '../base/component';
-import { cloneTemplate, createElement, ensureElement, formatNumber } from '../../utils/utils';
+import {
+	cloneTemplate,
+	createElement,
+	ensureElement,
+	formatNumber,
+} from '../../utils/utils';
 import { EventEmitter } from '../base/events';
 import { IBasketView } from '../../types';
 
@@ -8,7 +13,10 @@ export class BasketView extends Component<IBasketView> {
 	protected _total: HTMLElement;
 	protected _button: HTMLElement;
 
-	constructor(protected container: HTMLElement, protected events: EventEmitter) {
+	constructor(
+		protected container: HTMLElement,
+		protected events: EventEmitter
+	) {
 		super(container);
 
 		this._items = ensureElement<HTMLElement>('.basket__list', this.container);
@@ -43,7 +51,11 @@ export class BasketView extends Component<IBasketView> {
 		this.setDisabled(this._button, !value);
 	}
 
-	set total(total: number) {
-		this.setText(this._total, formatNumber(total) + ' синапсов');
+	set total(total: number | null) {
+		if (total === null) {
+		    this.setText(this._total, 'Бесценно');
+		} else {
+			this.setText(this._total, formatNumber(total) + ' синапсов');
+		}
 	}
 }

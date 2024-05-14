@@ -2,20 +2,38 @@ import { Model } from '../base/model';
 import { IBasketModel, ICatalogModel } from '../../types/index';
 import { IEvents } from '../../types';
 
-export class BasketModel extends Model<{ items: Set<string> }>
-	implements IBasketModel
-{
+interface IBasket {
 	items: Set<string>;
-	constructor(events: IEvents) {
-		super({ items: new Set<string>() }, events);
+}
+
+export class BasketModel extends Model<IBasket> implements IBasketModel {
+	items: Set<string>;
+
+	private static getDefault(): IBasket {
+		return { items: new Set<string>() };
 	}
-	validation(catalog: ICatalogModel): boolean{
-		if(this.items.size == 0) {
+	constructor(events: IEvents) {
+		super(BasketModel.getDefault(), events);
+	}
+	reset() {
+		Object.assign(this, BasketModel.getDefault());
+		this.emitChanges('basket:change', this.items);
+	}
+	getTotal(catalog: ICatalogModel): number | null {
+		let res = 0;
+		for (let id of Array.from(this.items.values())) {
+			const price = catalog.findProductById(id).price;
+			if (price === null) return null;
+			res = res + price;
+		}
+		return res;
+	}
+	validation(catalog: ICatalogModel): boolean {
+		if (this.items.size == 0) {
 			return false;
 		}
-		for (let id of Array.from(this.items.values())){
-			if (catalog.findProductById(id).price === null)
-				return false;
+		for (let id of Array.from(this.items.values())) {
+			if (catalog.findProductById(id).price === null) return false;
 		}
 		return true;
 	}

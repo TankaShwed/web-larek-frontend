@@ -1,9 +1,9 @@
 import { Form } from '../common/Form';
-import { IOrderForm } from '../../types';
+import { IContacts, IOrderForm } from '../../types';
 import { IEvents } from '../../types';
 import { cloneTemplate } from '../../utils/utils';
 
-export class ContactsForm extends Form<IOrderForm> {
+export class ContactsForm extends Form<IContacts> {
 	protected _email: HTMLInputElement;
 	protected _phone: HTMLInputElement;
 	constructor(events: IEvents) {
@@ -17,7 +17,7 @@ export class ContactsForm extends Form<IOrderForm> {
 		) as HTMLInputElement;
 	}
 
-	set adress(value: string) {
+	set phone(value: string) {
 		this._phone.value = value;
 	}
 	set email(value: string) {

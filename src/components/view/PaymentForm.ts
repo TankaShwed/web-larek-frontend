@@ -1,9 +1,9 @@
 import { Form } from '../common/Form';
-import { IOrderForm, TPaymentMethod } from '../../types';
+import { IOrderForm, IPayment, TPaymentMethod } from '../../types';
 import { IEvents } from '../../types';
 import { cloneTemplate, ensureAllElements } from '../../utils/utils';
 
-export class PaymentForm extends Form<IOrderForm> {
+export class PaymentForm extends Form<IPayment> {
 	protected _paymentButtons: HTMLButtonElement[];
 	protected _address: HTMLInputElement;
 	constructor(events: IEvents) {
@@ -23,12 +23,11 @@ export class PaymentForm extends Form<IOrderForm> {
 		);
 	}
 
-	set adress(value: string) {
+	set address(value: string) {
 		this._address.value = value;
 	}
 
 	set payment(value: TPaymentMethod) {
-		console.log('here', value);
 		this._paymentButtons.forEach((button) => {
 			this.toggleClass(button, 'button_alt-active', button.name === value);
 		});

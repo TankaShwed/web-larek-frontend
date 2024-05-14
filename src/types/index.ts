@@ -53,18 +53,23 @@ export interface IBasketModel {
 	items: Set<string>;
 	add(id: string): void;
 	remove(id: string): void;
+	getTotal(catalog: ICatalogModel): number|null;
+}
+
+export interface IContacts{
+	phone: string;
+	email: string;
+}
+
+export interface IPayment{
+	payment: TPaymentMethod;
+	address: string;
 }
 
 //ORDER
-export interface IOrder {
-	payment: TPaymentMethod;
-	email: string;
-	phone: number;
-	address: string;
+export interface IOrder extends IContacts, IPayment {
 	total: number;
 	items: string[];
-	valid: boolean;
-	errors: string[];
 }
 
 export interface IOrderForm {
@@ -89,13 +94,3 @@ export type EmitterEvent = {
 };
 
 export type TPaymentMethod = 'card' | 'cash';
-
-export type TPaymentErrors = {
-	payment?: string;
-	address?: string;
-};
-
-export type TContactsErrors = {
-	email?: string;
-	phone?: string;
-};

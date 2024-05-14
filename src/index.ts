@@ -4,23 +4,18 @@ import { MarketAPI } from './components/MarketAPI';
 import { CatalogModel } from './components/model/CatalogModel';
 import { CatalogView } from './components/view/CatalogView';
 import { EventEmitter } from './components/base/events';
-import { IEvents } from './types';
-import {
-	IOrder,
-	IProduct,
-	TContactsErrors,
-	TPaymentErrors,
-	TResponseOrder,
-} from './types';
+import { IContacts, IPayment } from './types';
+import {IProduct, TResponseOrder } from './types';
 import { API_URL } from './utils/constants';
 import { CardView } from './components/view/CardView';
 import { Modal } from './components/common/Modal';
 import { BasketModel } from './components/model/BasketModel';
+import { PaymentModel } from './components/model/PaymentModel';
+import { ContactsModel } from './components/model/ContactsModel';
 import { cloneTemplate, ensureElement } from './utils/utils';
 import { BasketView } from './components/view/BasketView';
 import { PaymentForm } from './components/view/PaymentForm';
 import { ContactsForm } from './components/view/ContactsForm';
-import { Model } from './components/base/model';
 import { SuccessView } from './components/common/Success';
 
 const api = new MarketAPI(API_URL);
@@ -32,44 +27,38 @@ const gallery = ensureElement<HTMLDivElement>('.gallery');
 const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
 const basketView = new BasketView(cloneTemplate('#basket'), events);
 const basketModel = new BasketModel(events);
-const paymentform = new PaymentForm(events);
+const paymentModel = new PaymentModel(events);
+const contactsModel = new ContactsModel(events);
+const paymentForm = new PaymentForm(events);
 const contactsForm = new ContactsForm(events);
 const successView = new SuccessView(events);
-const order: IOrder = {
-	payment: 'card',
-	email: '',
-	phone: 0,
-	address: '',
-	total: 0,
-	items: [],
-	valid: false,
-	errors: [],
-};
 const renderBasket = () => {
-	modal.render({
-		content: basketView.render({
-			total: order.total,
-            valid: basketModel.validation(catalogModel),
-			items: Array.from(basketModel.items.values()).map((el, ind) => {
-				const product = catalogModel.findProductById(el);
-				const basketItemView = new CardView(
-					cloneTemplate('#card-basket'),
-					events,
-					() => {
-						basketModel.remove(product.id);
-					}
-				);
-				return basketItemView.render({
-					index: ind + 1,
-					price: product.price,
-					title: product.title,
-				});
-			}),
+	return basketView.render({
+		total: basketModel.getTotal(catalogModel),
+		valid: basketModel.validation(catalogModel),
+		items: Array.from(basketModel.items.values()).map((el, ind) => {
+			const product = catalogModel.findProductById(el);
+			const basketItemView = new CardView(
+				cloneTemplate('#card-basket'),
+				events,
+				() => {
+					basketModel.remove(product.id);
+				}
+			);
+			return basketItemView.render({
+				index: ind + 1,
+				price: product.price,
+				title: product.title,
+			});
 		}),
 	});
 };
 
-basketButton.addEventListener('click', renderBasket);
+basketButton.addEventListener('click', () => {
+	modal.render({
+		content: renderBasket(),
+	});
+});
 
 api
 	.GetProductList()
@@ -98,24 +87,26 @@ events.on('card:click', (event: IProduct) => {
 	modal.render({ content: cardView.render(event) });
 });
 
-events.on('basket:change', (items: Set<string>) => {
-	const ids = Array.from(items.values());
-	order.items = [];
-	order.total = 0;
-	ids.forEach((productId) => {
-		const price = catalogModel.findProductById(productId).price;
-		order.total = order.total + price;
-		order.items.push(productId);
-	});
-	renderBasket();
-});
+events.on('basket:change', renderBasket);
 
 events.on('contacts:submit', () => {
-	api.PostOrder(order).then((r: TResponseOrder) => {
-		//@ts-ignore
-		successView.total = r.total;
-		modal.render({ content: successView.render(order) });
-	});
+	api
+		.PostOrder({
+			items: Array.from(basketModel.items.values()),
+			address: paymentModel.address,
+			payment: paymentModel.payment,
+			phone: contactsModel.phone,
+			email: contactsModel.email,
+			total: basketModel.getTotal(catalogModel),
+		})
+		.then((r: TResponseOrder) => {
+			//@ts-ignore
+			modal.render({ content: successView.render({ total: r.total }) });
+			contactsModel.reset();
+            console.log('dfg')
+			paymentModel.reset();
+			basketModel.reset();
+		});
 });
 
 events.on('successForm:okClick', () => {
@@ -123,64 +114,61 @@ events.on('successForm:okClick', () => {
 });
 
 events.on('order:open', () => {
-	modal.render({ content: paymentform.render(order) });
+	const errors = paymentModel.validate();
+	modal.render({
+		content: paymentForm.render({
+			payment: paymentModel.payment,
+			address: paymentModel.address,
+			errors: errors,
+			valid: errors.length == 0,
+		}),
+	});
 });
 
 events.on('order:submit', () => {
-	modal.render({ content: contactsForm.render(order) });
+	const errors = contactsModel.validate();
+	modal.render({
+		content: contactsForm.render({
+			email: contactsModel.email,
+			phone: contactsModel.phone,
+			errors: errors,
+			valid: errors.length == 0,
+		}),
+	});
 });
 
-events.on(/^order\..*:change/, (data: { field: keyof IOrder; value: any }) => {
-	const mixin = { [data.field]: data.value };
-	Object.assign(paymentform, mixin);
-	Object.assign(order, mixin);
-	console.log(data, paymentValidate(), order);
+events.on(
+	/^order\..*:change/,
+	(data: { field: keyof IPayment; value: any }) => {
+		const mixin = { [data.field]: data.value };
+		Object.assign(paymentModel, mixin);
+	}
+);
+
+events.on('payment:change', () => {
+	const errors = paymentModel.validate();
+	paymentForm.render({
+		payment: paymentModel.payment,
+		address: paymentModel.address,
+		errors: errors,
+		valid: errors.length == 0,
+	});
+});
+
+events.on('contacts:change', () => {
+	const errors = contactsModel.validate();
+	contactsForm.render({
+		email: contactsModel.email,
+		phone: contactsModel.phone,
+		errors: errors,
+		valid: errors.length == 0,
+	});
 });
 
 events.on(
 	/^contacts\..*:change/,
-	(data: { field: keyof IOrder; value: any }) => {
+	(data: { field: keyof IContacts; value: any }) => {
 		const mixin = { [data.field]: data.value };
-		Object.assign(contactsForm, mixin);
-		Object.assign(order, mixin);
-		contactsValidate();
+		Object.assign(contactsModel, mixin);
 	}
 );
-
-events.on('paymentFormError:change', (errors) => {
-	const vls = Object.values(errors);
-	const valid = vls.length === 0;
-	Object.assign(paymentform, { valid, errors: vls.join('. ') });
-});
-
-events.on('contactsFormError:change', (errors) => {
-	const vls = Object.values(errors);
-	const valid = vls.length === 0;
-	console.log('consta form error', vls);
-	Object.assign(contactsForm, { valid, errors: vls.join('. ') });
-});
-
-function paymentValidate() {
-	const errors: TPaymentErrors = {};
-	if (!order.payment) {
-		errors.payment = 'Необходимо указать способ оплаты';
-	}
-	if (!order.address) {
-		errors.address = 'Необходимо указать адрес';
-	}
-	console.log(errors);
-	events.emit('paymentFormError:change', errors);
-	return Object.keys(errors).length === 0;
-}
-
-function contactsValidate() {
-	const errors: TContactsErrors = {};
-	if (!order.email) {
-		errors.email = 'Необходимо указать email';
-	}
-	if (!order.phone) {
-		errors.phone = 'Необходимо указать телефон';
-	}
-	events.emit('contactsFormError:change', errors);
-	return Object.keys(errors).length === 0;
-}
