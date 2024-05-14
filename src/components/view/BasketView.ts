@@ -5,8 +5,7 @@ import {
 	ensureElement,
 	formatNumber,
 } from '../../utils/utils';
-import { EventEmitter } from '../base/events';
-import { IBasketView } from '../../types';
+import { IBasketView, IEventEmiter } from '../../types';
 
 export class BasketView extends Component<IBasketView> {
 	protected _items: HTMLElement;
@@ -15,7 +14,7 @@ export class BasketView extends Component<IBasketView> {
 
 	constructor(
 		protected container: HTMLElement,
-		protected events: EventEmitter
+		protected events: IEventEmiter
 	) {
 		super(container);
 
@@ -28,7 +27,7 @@ export class BasketView extends Component<IBasketView> {
 
 		if (this._button) {
 			this._button.addEventListener('click', () => {
-				events.emit('order:open');
+				events.emit('order:open', {});
 			});
 		}
 

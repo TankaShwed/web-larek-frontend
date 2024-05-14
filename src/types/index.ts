@@ -29,7 +29,7 @@ export interface ISuccess {
 
 export interface IBasketView {
     items: HTMLElement[];
-    total: number;
+    total: number |null;
     valid: boolean;
 }
 

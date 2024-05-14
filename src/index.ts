@@ -18,41 +18,29 @@ import { PaymentForm } from './components/view/PaymentForm';
 import { ContactsForm } from './components/view/ContactsForm';
 import { SuccessView } from './components/common/Success';
 
+import { Application} from './components/Application';
+
+
 const api = new MarketAPI(API_URL);
+
 const events = new EventEmitter();
+const application = new Application(events);
+
 const catalogModel = new CatalogModel(events);
 const catalogView = new CatalogView(events);
-const modal = new Modal(document.querySelector('#modal-container'), events);
-const gallery = ensureElement<HTMLDivElement>('.gallery');
-const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
-const basketView = new BasketView(cloneTemplate('#basket'), events);
 const basketModel = new BasketModel(events);
 const paymentModel = new PaymentModel(events);
 const contactsModel = new ContactsModel(events);
 const paymentForm = new PaymentForm(events);
 const contactsForm = new ContactsForm(events);
 const successView = new SuccessView(events);
-const renderBasket = () => {
-	return basketView.render({
-		total: basketModel.getTotal(catalogModel),
-		valid: basketModel.validation(catalogModel),
-		items: Array.from(basketModel.items.values()).map((el, ind) => {
-			const product = catalogModel.findProductById(el);
-			const basketItemView = new CardView(
-				cloneTemplate('#card-basket'),
-				events,
-				() => {
-					basketModel.remove(product.id);
-				}
-			);
-			return basketItemView.render({
-				index: ind + 1,
-				price: product.price,
-				title: product.title,
-			});
-		}),
-	});
-};
+
+
+const modal = new Modal(document.querySelector('#modal-container'), events);
+const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
+const basketView = new BasketView(cloneTemplate('#basket'), events);
+
+const renderBasket = () => {application.renderBasket()};
 
 basketButton.addEventListener('click', () => {
 	modal.render({
@@ -62,7 +50,7 @@ basketButton.addEventListener('click', () => {
 
 api
 	.GetProductList()
-	.then((json) => (catalogModel.items = json.items))
+	.then((json) => application.updateCatalog(json))
 	.catch((err) => console.error(err));
 
 events.on('catalog:change', (event: { items: IProduct[] }) => {
@@ -80,7 +68,6 @@ events.on('catalog:change', (event: { items: IProduct[] }) => {
 });
 
 events.on('card:click', (event: IProduct) => {
-	// renderBasket(event.items);
 	const cardView = new CardView(cloneTemplate('#card-preview'), events, () => {
 		basketModel.add(event.id);
 	});
