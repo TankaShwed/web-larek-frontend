@@ -30,7 +30,8 @@ export class Application {
 	private successView: SuccessView;
 	private modal: Modal;
 	private basketView: BasketView;
-    private busketCount: HTMLElement;
+	private busketCount: HTMLElement;
+	private currentCardView?: CardView;
 
 	constructor(private events: IEventEmiter & IEvents) {
 		this.catalogModel = new CatalogModel(events);
@@ -41,7 +42,9 @@ export class Application {
 		this.paymentForm = new PaymentForm(events);
 		this.contactsForm = new ContactsForm(events);
 		this.successView = new SuccessView(events);
-        this.busketCount = ensureElement<HTMLSpanElement>('.header__basket-counter');
+		this.busketCount = ensureElement<HTMLSpanElement>(
+			'.header__basket-counter'
+		);
 
 		this.modal = new Modal(
 			ensureElement<HTMLElement>('#modal-container'),
@@ -58,7 +61,13 @@ export class Application {
 	}
 
 	renderBasket() {
-        this.busketCount.textContent = this.basketModel.items.size + '';
+		this.busketCount.textContent = this.basketModel.items.size + '';
+		if (this.currentCardView) {
+			this.currentCardView.render({
+				disabledBuy: this.basketModel.items.has(this.currentCardView.id),
+			});
+		}
+
 		return this.basketView.render({
 			total: this.basketModel.getTotal(this.catalogModel),
 			valid: this.basketModel.validation(this.catalogModel),
@@ -99,14 +108,19 @@ export class Application {
 	}
 
 	openCard(product: IProduct) {
-		const cardView = new CardView(
+		this.currentCardView = new CardView(
 			cloneTemplate('#card-preview'),
 			this.events,
 			() => {
 				this.basketModel.add(product.id);
 			}
 		);
-		this.modal.render({ content: cardView.render(product) });
+		this.modal.render({
+			content: this.currentCardView.render({
+				...product,
+				disabledBuy: this.basketModel.items.has(product.id),
+			}),
+		});
 	}
 
 	buildOrder(): IOrder {

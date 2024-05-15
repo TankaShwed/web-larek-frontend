@@ -30,7 +30,7 @@ const categoryMap: { [key: string]: TCategoryClassPostfix } = {
 	'хард-скил': 'hard',
 };
 
-export class CardView extends Component<IProduct & { index?: number }> {
+export class CardView extends Component<IProduct & { index?: number, disabledBuy?: boolean} > {
 	private _index?: HTMLElement;
 	private _title: HTMLElement;
 	private _price: HTMLElement;
@@ -38,6 +38,11 @@ export class CardView extends Component<IProduct & { index?: number }> {
 	private _image?: HTMLImageElement;
 	private _category?: HTMLElement;
 	private _button: HTMLElement;
+	id: string; 
+
+	set disabledBuy(value: boolean) {
+		this.setDisabled(this._button, value);
+	}
 
 	set title(value: string) {
 		this.setText(this._title, value);
@@ -45,7 +50,7 @@ export class CardView extends Component<IProduct & { index?: number }> {
 
 	set price(value: number | null) {
 		if (value === null) {
-			this.setText(this._price , 'бесценно')
+			this.setText(this._price, 'бесценно');
 		} else {
 			this.setText(this._price, `${value} синапсов`);
 		}
