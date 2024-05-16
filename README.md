@@ -171,9 +171,41 @@ class CatalogModel implements ICatalogModel {
 	getProduct(id: string): IProduct 
 }
 ```
-3 объект Order
+3 класс ContactsModel
 
-Хранит только данные о контактах и о способах платежа и адрессе. Так же в него агрегируются продукты из корзины, и далле это используется для создания заказа на сервере.
+```
+class ContactsModel extends Model<IContacts> {
+	private _email: string;
+	private _phone: string;
+	private static getDefault(): IContacts {}
+	constructor() 
+	validate()
+
+    set email()
+    set phone()
+	get email()
+	get phone()
+
+}
+```
+
+4 класс PaymentModel
+
+```
+export class PaymentModel extends Model<IPayment> {
+	private _payment: TPaymentMethod;
+	private _address: string;
+	private static getDefault(): IPayment {
+		return { payment: 'card', address: '' }
+	}
+	constructor(events: IEvents) {}
+	validate()
+	set payment(value: TPaymentMethod)
+	set address(value: string) 
+	get payment()
+	get address()
+}
+```
 
 ## Коммуникация
 
@@ -191,23 +223,7 @@ class MarketAPI extends Api {
 
 ## Компоненты представления
 
-1 класс BasketItemView
-
-Используется для отображения строчки товара в списке товаров в корзине. Генерит события при нажатии удаления товара. 
-
-```
-class BasketItemView extends Component<IProduct> {
-    private _index: HTMLElement;
-    private _title: HTMLElement;
-    private _price: HTMLElement;
-	constructor(protected events: IEventEmiter, )
-    setProduct(product: IProduct)
-    setIndex(index: number)
-    setCount(index: number)
-}
-```
-
-2 класс BasketView
+1 класс BasketView
 
 Отображение корзины целиком. Получает массив срендеренных элементов от BasketItemView. 
 Ловит нажатие кнопки оформить заказ. Тригерит событие оформления заказа.
@@ -224,7 +240,7 @@ export class BasketView extends Component<IBasketView> {
 }
 ```
 
-3 класс CardView
+2 класс CardView
 
 Отображает одну открытую карточку и ловит событие добавить в корзину. Будет использоваться в модальном окне. 
 
@@ -244,7 +260,7 @@ class CardView extends Component<IProduct> {
 }
 ```
 
-4 класс CatalogView
+3 класс CatalogView
 
 Отображается на главной странице. Переопределяем рендер из базового класса так чтобы шаблон дублировать для каждого item. Ловит события нажатия на карточку.
 
@@ -255,7 +271,7 @@ class CatalogView extends Component<{ items: IProduct[] }> {
 }
 ```
 
-5 класс ContactsForm
+4 класс ContactsForm
 
 Отображает модальное окно с вводом контактов заказчика: email, phone.
 
@@ -269,6 +285,38 @@ class ContactsForm extends Form<IOrderForm> {
 }
 
 ```
+
+5 класс PageView
+
+```
+class PageView extends Component<IPageView> {
+	//container это враппер всей страницы
+	private _basketCount: HTMLSpanElement;
+
+	constructor(
+		container: HTMLElement,
+		protected events: IEventEmiter,
+		onBasketClick: () => void
+	) {
+		super(container);
+		this._basketCount = ensureElement<HTMLSpanElement>(
+			'.header__basket-counter',
+			this.container
+		);
+		const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
+		basketButton.addEventListener('click', onBasketClick);
+	}
+
+	set basketCount(value: number) {
+		this.setText(this._basketCount, value.toString());
+	}
+
+	set scrollState(value: boolean) {
+		this.toggleClass(this.container, 'page__wrapper_locked', value);
+	}
+}
+```
+
 
 6 класс PaymentForm
 

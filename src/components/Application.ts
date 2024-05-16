@@ -3,6 +3,7 @@ import {
 	IEventEmiter,
 	IEvents,
 	IOrder,
+	IPageView,
 	IPayment,
 	IProduct,
 } from '../types';
@@ -18,6 +19,7 @@ import { PaymentForm } from './view/PaymentForm';
 import { ContactsForm } from './view/ContactsForm';
 import { SuccessView } from './common/Success';
 import { CardView } from './view/CardView';
+import { PageView } from './view/PageView';
 
 export class Application {
 	private catalogModel: CatalogModel;
@@ -30,9 +32,8 @@ export class Application {
 	private successView: SuccessView;
 	private modal: Modal;
 	private basketView: BasketView;
-	private busketCount: HTMLElement;
 	private currentCardView?: CardView;
-    private wrapper: HTMLElement;
+	private pageView: IPageView;
 
 	constructor(private events: IEventEmiter & IEvents) {
 		this.catalogModel = new CatalogModel(events);
@@ -43,22 +44,24 @@ export class Application {
 		this.paymentForm = new PaymentForm(events);
 		this.contactsForm = new ContactsForm(events);
 		this.successView = new SuccessView(events);
-		this.busketCount = ensureElement<HTMLSpanElement>('.header__basket-counter');
-        this.wrapper = ensureElement<HTMLElement>('.page__wrapper');
-
-		this.modal = new Modal(ensureElement<HTMLElement>('#modal-container'),events);
-		const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
+		this.pageView = new PageView(
+			ensureElement<HTMLElement>('.page__wrapper'),
+			events,
+			() => {
+				this.modal.render({
+					content: this.renderBasket(),
+				});
+			}
+		);
+		this.modal = new Modal(
+			ensureElement<HTMLElement>('#modal-container'),
+			events
+		);
 		this.basketView = new BasketView(cloneTemplate('#basket'), events);
-
-		basketButton.addEventListener('click', () => {
-			this.modal.render({
-				content: this.renderBasket(),
-			});
-		});
 	}
 
 	renderBasket() {
-		this.busketCount.textContent = this.basketModel.items.size + '';
+		this.pageView.basketCount = this.basketModel.items.size;
 		if (this.currentCardView) {
 			this.currentCardView.render({
 				disabledBuy: this.basketModel.items.has(this.currentCardView.id),
@@ -105,8 +108,6 @@ export class Application {
 	}
 
 	openCard(product: IProduct) {
-        //todo
-        // this.wrapper.classList.add('page__wrapper_locked');
 		this.currentCardView = new CardView(
 			cloneTemplate('#card-preview'),
 			this.events,
@@ -122,13 +123,13 @@ export class Application {
 		});
 	}
 
-    lockedWrapper(){
-        this.wrapper.classList.add('page__wrapper_locked');
-    }
+	lockedWrapper() {
+		this.pageView.scrollState = true;
+	}
 
-    unlockedWrapper(){
-        this.wrapper.classList.remove('page__wrapper_locked');
-    }
+	unlockedWrapper() {
+		this.pageView.scrollState = false;
+	}
 
 	buildOrder(): IOrder {
 		return {

@@ -33,6 +33,11 @@ export interface IBasketView {
     valid: boolean;
 }
 
+export interface IPageView {
+	set basketCount(value: number);
+	set scrollState(value: boolean);
+}
+
 export interface IEvents {
 	on<T extends object>(event: EventName, callback: (data: T) => void): void;
 	emit<T extends object>(event: string, data?: T): void;
