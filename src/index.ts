@@ -68,3 +68,11 @@ events.on(
 		application.updateContacts(data.field, data.value);
 	}
 );
+
+events.on('modal:open', ()=>{
+    application.lockedWrapper();
+});
+
+events.on('modal:close', ()=>{
+    application.unlockedWrapper();
+})

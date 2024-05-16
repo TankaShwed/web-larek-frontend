@@ -32,6 +32,7 @@ export class Application {
 	private basketView: BasketView;
 	private busketCount: HTMLElement;
 	private currentCardView?: CardView;
+    private wrapper: HTMLElement;
 
 	constructor(private events: IEventEmiter & IEvents) {
 		this.catalogModel = new CatalogModel(events);
@@ -42,14 +43,10 @@ export class Application {
 		this.paymentForm = new PaymentForm(events);
 		this.contactsForm = new ContactsForm(events);
 		this.successView = new SuccessView(events);
-		this.busketCount = ensureElement<HTMLSpanElement>(
-			'.header__basket-counter'
-		);
+		this.busketCount = ensureElement<HTMLSpanElement>('.header__basket-counter');
+        this.wrapper = ensureElement<HTMLElement>('.page__wrapper');
 
-		this.modal = new Modal(
-			ensureElement<HTMLElement>('#modal-container'),
-			events
-		);
+		this.modal = new Modal(ensureElement<HTMLElement>('#modal-container'),events);
 		const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
 		this.basketView = new BasketView(cloneTemplate('#basket'), events);
 
@@ -108,6 +105,8 @@ export class Application {
 	}
 
 	openCard(product: IProduct) {
+        //todo
+        // this.wrapper.classList.add('page__wrapper_locked');
 		this.currentCardView = new CardView(
 			cloneTemplate('#card-preview'),
 			this.events,
@@ -122,6 +121,14 @@ export class Application {
 			}),
 		});
 	}
+
+    lockedWrapper(){
+        this.wrapper.classList.add('page__wrapper_locked');
+    }
+
+    unlockedWrapper(){
+        this.wrapper.classList.remove('page__wrapper_locked');
+    }
 
 	buildOrder(): IOrder {
 		return {
