@@ -1,6 +1,6 @@
 import { ICatalogModel, IEventEmiter, IProduct } from '../../types';
 
-export class CatalogModel implements ICatalogModel {
+export class CatalogModel implements ICatalogModel {  
 	private _items: IProduct[];
 
 	constructor(protected events: IEventEmiter) {}

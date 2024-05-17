@@ -12,13 +12,13 @@ export class SuccessView extends Component<ISuccess> {
 		button.addEventListener('click', () => {
 			events.emit('successForm:okClick', {});
 		});
-		this.description = ensureElement<HTMLElement>(
+		this.description = ensureElement<HTMLElement>(  //change
 			'.order-success__description',
 			this.container
 		);
 	}
 
 	set total(value: number) {
-        this.setText(this.description, `Списанно ${value} синапсов`);
+        this.setText(this.description, `Списанно ${value} синапсов`);  //change
     }
 }

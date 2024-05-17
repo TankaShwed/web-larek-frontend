@@ -7,12 +7,15 @@ export class PaymentModel extends Model<IPayment> {
 	private static getDefault(): IPayment {
 		return { payment: 'card', address: '' };
 	}
+
 	constructor(events: IEvents) {
 		super(PaymentModel.getDefault(), events);
 	}
+
 	reset() {
 		Object.assign(this, PaymentModel.getDefault());
 	}
+    
 	validate(): string[] {
 		const errors: string[] = [];
 		if (!this.payment) {

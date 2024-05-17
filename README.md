@@ -76,7 +76,7 @@ class Api {
 }
 ```
 
-2 класс Component<T>
+2 класс Component```<T>```
 
 Код в конструкторе исполняется до всех объявлений в дочернем классе.
 Абстрактный класс для компонентов отображения(view), является дженериком, принимает контейнер является корневым DOM элементом разметки за которую отвечает конкретный компонент отоброжения, то есть от него наследуются все компоненты отображения.
@@ -97,10 +97,6 @@ abstract class Component<T> {
 }
 
 ```
-
-//добавить описание работы компонента
-
-Object.Assign
 
 3 класс EventEmitter
 
@@ -123,7 +119,7 @@ class EventEmitter implements IEvents {
 }
 ```
 
-4 класс Model<T> 
+4 класс Model```<T>```
 
 Является базовым классом для моделей. Нужен чтобы получить данные и уведомлять что данные поменялись.
 Абстрактный класс является дженериком и принимает в переменной T тип данных в
@@ -136,20 +132,28 @@ abstract class Model<T> {
 }
 ```
 
-## Компоненты модели данных (бизнес-логика)
+## Компоненты модели данных
 
 1 класс BasketModel
 
 Содержит id товаров, которые были добавлены в корзину и их количество.
-Реализует интерфейс IBasketModel. Наследуется от Model.
+Реализует интерфейс IBasketModel. Наследуется от Model```<IBasket>``` .
 
-Ключевые методы: add, remove - позволяет добавить товар и убавить.
+Ключевые методы: 
++ add() - добавляет товар
++ remove() - убирает товар
++ reset() - сбрасывает корзину, фактически удляет товары
++ getTotal() - получает общую сумму товаров
++ validation() - проверка можно ли формить заказ по товару(в случае бесценного товара заказ оформить не получится)
 
 ```
-class BasketModel extends Model<{ items: Map<string, number> }>
-    implements IBasketModel
-	items: Map<string, number>;
+class BasketModel extends Model<IBasket> implements IBasketModel
+	items: Set<string>
+    private static getDefault(): IBasket
 	constructor(events: IEvents)
+    reset()
+    getTotal(catalog: ICatalogModel): number | null
+    validation(catalog: ICatalogModel): boolean
 	add(id: string): void
 	remove(id: string): void
 }
@@ -157,53 +161,76 @@ class BasketModel extends Model<{ items: Map<string, number> }>
 
 2 класс CatalogModel
 
-Содержит продукты полученные с сервера.
+Содержит полученные продукты(товары).
 Реализует интерфейс ICatalogModel.
 
-Ключевые методы: setItems, getProduct - позволяют получить продукт по id этого продукта, он тригерит события в момент выставления items, по факту когда придут данные с сервера.
-
+Ключевые методы: 
++ set items() - устанавливает список продуктов
++ get items() - возвращает список продуктотв
++ findProductById() - получает продукт по id
+    
 ```
 class CatalogModel implements ICatalogModel {
-	items: IProduct[];
+	private _items: IProduct[]
 	constructor(protected events: IEventEmiter)
-	protected _changed() 
-	setItems(items: IProduct[]): void 
-	getProduct(id: string): IProduct 
+	set items(items: IProduct[])
+    get items()
+    findProductById(id: string)
 }
 ```
+
 3 класс ContactsModel
+
+Содержит контакты покупателя.
+Наследуется от Model```<IContacts>``` .
+
+Ключевые методы: 
++ reset() - брасывает данные, фактически удляет их
++ validate() - проверяет заполнены ли email и телефон 
++ set email() - устанавливает email покупателя
++ set phone() - устанавливает телефон покупателя
++ get email() - возвращает email
++ get phone() - возвращает телефон 
 
 ```
 class ContactsModel extends Model<IContacts> {
 	private _email: string;
 	private _phone: string;
-	private static getDefault(): IContacts {}
-	constructor() 
-	validate()
-
-    set email()
-    set phone()
-	get email()
-	get phone()
-
+	private static getDefault(): IContacts
+	constructor(events: IEvents)
+    reset()
+	validate(): string[]
+    set email(value: string)
+    set phone(value: string)
+	get email(): string
+	get phone(): string
 }
 ```
 
 4 класс PaymentModel
+Содержит id товаров, которые были добавлены в корзину и их количество.
+Наследуется от Model```<IPayment>``` .
+
+Ключевые методы: 
++ reset() - брасывает данные, фактически удляет их
++ validate() - проверяет заполнены ли адрес и выбрана оплата 
++ set payment() - устанавливает тип оплаты
++ set address() - устанавливает адрес покупателя
++ get payment() - возвращает тип оплаты
++ get address() - возвращает адрес 
 
 ```
-export class PaymentModel extends Model<IPayment> {
-	private _payment: TPaymentMethod;
-	private _address: string;
-	private static getDefault(): IPayment {
-		return { payment: 'card', address: '' }
-	}
-	constructor(events: IEvents) {}
-	validate()
+class PaymentModel extends Model<IPayment> {
+	private _payment: TPaymentMethod
+	private _address: string
+	private static getDefault(): IPayment
+	constructor(events: IEvents)
+    reset()
+	validate(): string[]
 	set payment(value: TPaymentMethod)
 	set address(value: string) 
-	get payment()
-	get address()
+	get payment(): TPaymentMethod
+	get address(): string
 }
 ```
 
@@ -211,13 +238,75 @@ export class PaymentModel extends Model<IPayment> {
 
 класс MarketAPI
 
-Слой коммуникации с сервером который находится перед слоем модели
+Слой коммуникации с сервером который находится перед слоем модели. Наследуется от базового Api.
+
+Ключевые методы: 
++ GetProductList() - получает список товаров
++ GetProductItem() - получает товар  по id
++ PostOrder() - отправляет заказ
 
 ```
 class MarketAPI extends Api {
 	GetProductList(): Promise<TResponseProductList> 
 	GetProductItem(id: string): Promise<TResponseProductItem> 
 	PostOrder(order: IOrder): Promise<TResponseOrder> 
+}
+```
+
+## Презентер
+
+класс Application
+Отвечает за связь между моделями и компонентами представления
+
+Ключевые методы: 
++ renderBasket() - отрисовка карзины на базе её модели
++ updateCatalog() - обновляет продукт в модели 
++ renderCatalog() - на базе изменения модели отображает каталог на странице
++ openCard() - открывает карточку
++ lockedWrapper() - блокирует прокрутку страницы при открытии модального окна
++ unlockedWrapper() - разблокирует прокрутку страницы при закрытии модального окна
++ buildOrder() - собирает заказ из моделей
++ renderAnswer() - показывает модальное окно успешного заказа от сервера
++ closeModal() - закрытие модального окна
++ openPayment() - отткрывает форму с выбором оплаты
++ openContacts() - открывает форму с вводом контактов
++ updatePayment() - обновляет данные выбора оплаты у инпутов в соответсвии с изменением модели
++ renderPayment() - открывает форму со способом оплаты
++ renderContacts() - открывает форму с контактами
++ updateContacts() - обновляет данные контактов у инпутов в соответсвии с изменением модели
+
+
+```
+class Application {
+	private catalogModel: CatalogModel;
+	private catalogView: CatalogView;
+	private basketModel: BasketModel;
+	private paymentModel: PaymentModel;
+	private contactsModel: ContactsModel;
+	private paymentForm: PaymentForm;
+	private contactsForm: ContactsForm;
+	private successView: SuccessView;
+	private modal: Modal;
+	private basketView: BasketView;
+	private currentCardView?: CardView;
+	private pageView: IPageView;
+
+	constructor(private events: IEventEmiter & IEvents) 
+	renderBasket() 
+	updateCatalog(json: any) 
+	renderCatalog() 
+	openCard(product: IProduct) 
+	lockedWrapper() 
+	unlockedWrapper() 
+	buildOrder(): IOrder 
+	renderAnswer(total: number)
+	closeModal() 
+	openPayment() 
+	openContacts()
+	updatePayment(field: keyof IPayment, value: any)
+	renderPayment(): HTMLElement 
+	renderContacts(): HTMLElement
+	updateContacts(field: keyof IContacts, value: any)
 }
 ```
 
@@ -228,14 +317,20 @@ class MarketAPI extends Api {
 Отображение корзины целиком. Получает массив срендеренных элементов от BasketItemView. 
 Ловит нажатие кнопки оформить заказ. Тригерит событие оформления заказа.
 
+Ключевые методы: 
++ set items() - отображает список продуктов
++ set valid() - переключает состояние кнопки "Оформить"
++ set total() - отображает общую сумму заказа
+
+
 ```
-export class BasketView extends Component<IBasketView> {
+class BasketView extends Component<IBasketView> {
 	protected _list: HTMLElement;
 	protected _total: HTMLElement;
 	protected _button: HTMLElement;
-	constructor(protected events: EventEmitter)
+	constructor(protected container: HTMLElement, protected events: IEventEmiter)
 	set items(items: HTMLElement[])
-	set selected(items: string[])
+	set valid(value: boolean)
 	set total(total: number)
 }
 ```
@@ -243,44 +338,75 @@ export class BasketView extends Component<IBasketView> {
 2 класс CardView
 
 Отображает одну открытую карточку и ловит событие добавить в корзину. Будет использоваться в модальном окне. 
+Наследуется от ```Component<IProduct & { index?: number, disabledBuy?: boolean} >```
+
+Ключевые методы: 
++ set disabledBuy(value: boolean) - если карточка товара уже в корзине то кнопка купить товар блокируется
++ set title(value: string) - отображает заголовок
++ set price(value: number | null) - отображает цену товара
++ set description(value: string) - отображает описание товара
++ set category(value: string) - отображает категорию товара
++ set image(value: string) - отображает картинку товара
++ set index(value: number) - отображает в корзине порядковый номер
+
 
 ```
-class CardView extends Component<IProduct> {
-    protected _category: HTMLElement;
-	protected _title: HTMLElement;
-	protected _description: HTMLElement;
-    protected _image: HTMLElement;
-	protected _price: HTMLElement;
-	constructor(protected events: IEventEmiter)
-	set category(value: string)
+class CardView extends Component<IProduct & { index?: number, disabledBuy?: boolean} > {
+    private _index?: HTMLElement;
+	private _title: HTMLElement;
+	private _price: HTMLElement;
+	private _description?: HTMLElement;
+	private _image?: HTMLImageElement;
+	private _category?: HTMLElement;
+	private _button: HTMLElement;
+	id: string;
+    constructor(
+		container: HTMLElement,
+		protected events: IEventEmiter,
+		onClick: () => void
+	)
+    set disabledBuy(value: boolean)
 	set title(value: string)
+    set price(value: number | null)
     set description(value: string)
+    set category(value: string)
     set image(value: string)
-    set price(value: number)
+    set index(value: number)
 }
 ```
 
 3 класс CatalogView
 
 Отображается на главной странице. Переопределяем рендер из базового класса так чтобы шаблон дублировать для каждого item. Ловит события нажатия на карточку.
+Наследуется от ```Component<{ items: HTMLElement[] }>```
+
+Ключевые методы: 
++ set items() - отображает каталог товаров
+
 
 ```
-class CatalogView extends Component<{ items: IProduct[] }> {
+class CatalogView extends Component<{ items: HTMLElement[] }> {
 	constructor(private events: IEventEmiter) 
-	render(data?: { items: IProduct[] }): HTMLElement
+	set items(value: HTMLElement[])
 }
 ```
 
 4 класс ContactsForm
 
 Отображает модальное окно с вводом контактов заказчика: email, phone.
+Наследуется от ```Form<IContacts>```
+
+Ключевые методы: 
++ set phone() - отображает значениев поля телефон
++ set email() - отображает значение поля email
+
 
 ```
-class ContactsForm extends Form<IOrderForm> {
+class ContactsForm extends Form<IContacts> {
 	protected _email: HTMLInputElement;
 	protected _phone: HTMLInputElement;
 	constructor(events: IEvents) 
-	set adress(value: string) 
+	set phone(value: string) 
 	set email(value: string) 
 }
 
@@ -288,42 +414,38 @@ class ContactsForm extends Form<IOrderForm> {
 
 5 класс PageView
 
+Отображение элементов главной страницы
+Наследуется от ```Component<IPageView>```
+
+Ключевые методы: 
++ set basketCount() - количество отоваров
++ set scrollState() - блокировка прокрутки страницы при открытии модаольного окна
+
 ```
 class PageView extends Component<IPageView> {
-	//container это враппер всей страницы
 	private _basketCount: HTMLSpanElement;
-
 	constructor(
 		container: HTMLElement,
 		protected events: IEventEmiter,
 		onBasketClick: () => void
-	) {
-		super(container);
-		this._basketCount = ensureElement<HTMLSpanElement>(
-			'.header__basket-counter',
-			this.container
-		);
-		const basketButton = ensureElement<HTMLButtonElement>('.header__basket');
-		basketButton.addEventListener('click', onBasketClick);
-	}
-
-	set basketCount(value: number) {
-		this.setText(this._basketCount, value.toString());
-	}
-
-	set scrollState(value: boolean) {
-		this.toggleClass(this.container, 'page__wrapper_locked', value);
-	}
+	)
+	set basketCount(value: number)
+	set scrollState(value: boolean)
 }
 ```
-
 
 6 класс PaymentForm
 
 Отображает модальное окно с вводом адреса заказчика и выбором способа оплаты (card/cash). 
+Наследуется от ```Form<IPayment>```
+
+Ключевые методы: 
++ set adress() - отображает значения поля адрес
++ set payment() - отображает значение оплаты
+
 
 ```
-class PaymentForm extends Form<IOrderForm> {
+class PaymentForm extends Form<IPayment> {
 	protected _paymentButtons: HTMLButtonElement[];
 	protected _address: HTMLInputElement;
 	constructor(events: IEvents) 
@@ -336,26 +458,12 @@ class PaymentForm extends Form<IOrderForm> {
 
 ```
 interface IProduct {
-    id: string;
-    description: string;
-    image: string;
-    title: string;
-    category: string;
-    price: number;
-}
-```
-
-```
-interface IOrder {
-    id: string;
-    total: number;
-}
-```
-
-```
-interface IOrderForm {
-	payment: TPaymentMethod;
-	address: string;
+	id: string;
+	description: string;
+	image: string;
+	title: string;
+	category: string;
+	price: number;
 }
 ```
 
@@ -384,12 +492,24 @@ interface ISuccess {
 }
 ```
 
+```
+interface IBasket {
+	items: Set<string>;
+}
+```
 
 ```
 interface IBasketView {
     items: HTMLElement[];
-    total: number;
-    selected: string[];
+    total: number |null;
+    valid: boolean;
+}
+```
+
+```
+interface IPageView {
+	set basketCount(value: number);
+	set scrollState(value: boolean);
 }
 ```
 
@@ -407,38 +527,59 @@ interface IEvents {
 ```
 interface ICatalogModel {
 	items: IProduct[];
-	setItems(items: IProduct[]): void; // чтобы установить после загрузки из апи
-	getProduct(id: string): IProduct; // чтобы получить при рендере списков
+	findProductById(id: string): IProduct; // чтобы получить при рендере списков
 }
 ```
 
 ```
 interface IBasketModel {
-	items: Map<string, number>;
+	items: Set<string>;
 	add(id: string): void;
 	remove(id: string): void;
+	getTotal(catalog: ICatalogModel): number|null;
 }
 ```
 
-Вариант ответов от сервера:
-
 ```
-type TResponseProductList = {
-    total: number;
-    items: IProduct[];
+interface IContacts{
+	phone: string;
+	email: string;
 }
 ```
 
-При запросе списка всех продуктов, состоит из количества подуктов и массива самих продуктов.
+```
+interface IPayment{
+	payment: TPaymentMethod;
+	address: string;
+}
+```
 
 ```
-type TResponseProductItem = IProduct | {error: "NotFound"};
+interface IOrder extends IContacts, IPayment {
+	total: number;
+	items: string[];
+}
 ```
 
-По id ищет какой-то конкретный продукт или получает ошибку о том что продукт не найден.
+```
+interface IOrderForm {
+	payment: TPaymentMethod;
+	address: string;
+}
+```
 
 ```
-type TResponseOrder = IOrder | {error: string};
+type TResponseProductList = ApiListResponse<IProduct>;
+```
+
+При запросе списка всех продуктов, состоит из количества подуктов и массива самих продуктов
+```
+type TResponseProductItem = IProduct | { error: 'NotFound' };
+```
+
+По id ищет какой-то конкретный продукт или получает ошибку о том что продукт не найден
+```
+type TResponseOrder = { id: string; total: number } | { error: string };
 ```
 
 ```
@@ -448,16 +589,8 @@ type EmitterEvent = {
 	eventName: string;
 	data: unknown;
 };
+```
 
+```
 type TPaymentMethod = 'card' | 'cash';
-
-type TPaymentErrors = {
-	payment?: string;
-	address?: string;
-};
-
-type TContactsErrors = {
-	email?: string;
-	phone?: string;
-};
 ```

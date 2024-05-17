@@ -27,6 +27,10 @@ export interface ISuccess {
 	total: number;
 }
 
+export interface IBasket {
+	items: Set<string>;
+}
+
 export interface IBasketView {
     items: HTMLElement[];
     total: number |null;
@@ -47,13 +51,11 @@ export interface IEvents {
 	): (data: T) => void;
 }
 
-//PRODUCTS(CATALOG)
 export interface ICatalogModel {
 	items: IProduct[];
-	findProductById(id: string): IProduct; // чтобы получить при рендере списков
+	findProductById(id: string): IProduct; //чтобы получить при рендере списков
 }
 
-//BASKET
 export interface IBasketModel {
 	items: Set<string>;
 	add(id: string): void;
@@ -71,7 +73,6 @@ export interface IPayment{
 	address: string;
 }
 
-//ORDER
 export interface IOrder extends IContacts, IPayment {
 	total: number;
 	items: string[];

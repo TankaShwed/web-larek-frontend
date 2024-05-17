@@ -7,12 +7,15 @@ export class ContactsModel extends Model<IContacts> {
 	private static getDefault(): IContacts {
 		return { email: '', phone: '' };
 	}
+	
 	constructor(events: IEvents) {
 		super(ContactsModel.getDefault(), events);
 	}
+
 	reset() {
 		Object.assign(this, ContactsModel.getDefault());
 	}
+
 	validate(): string[] {
 		const errors: string[] = [];
 		if (!this.email) {

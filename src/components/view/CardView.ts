@@ -40,6 +40,43 @@ export class CardView extends Component<IProduct & { index?: number, disabledBuy
 	private _button: HTMLElement;
 	id: string; 
 
+
+	constructor(
+		container: HTMLElement,
+		protected events: IEventEmiter,
+		onClick: () => void
+	) {
+		super(container);
+		this._price = ensureElement<HTMLSpanElement>(
+			'.card__price',
+			this.container
+		);
+		this._title = ensureElement<HTMLSpanElement>(
+			'.card__title',
+			this.container
+		);
+		this._category = customeEnsureElement<HTMLSpanElement>(
+			'.card__category',
+			this.container
+		);
+		this._description = customeEnsureElement<HTMLSpanElement>(
+			'.card__text',
+			this.container
+		);
+		this._image = customeEnsureElement<HTMLImageElement>(
+			'.card__image',
+			this.container
+		);
+		this._index = customeEnsureElement<HTMLSpanElement>(
+			'.basket__item-index',
+			this.container
+		);
+		this._button =
+			customeEnsureElement<HTMLButtonElement>('button', this.container) ||
+			this.container;
+		this._button.addEventListener('click', onClick);
+	}
+
 	set disabledBuy(value: boolean) {
 		this.setDisabled(this._button, value);
 	}
@@ -80,39 +117,4 @@ export class CardView extends Component<IProduct & { index?: number, disabledBuy
 		if (this._index) this.setText(this._index, value);
 	}
 
-	constructor(
-		container: HTMLElement,
-		protected events: IEventEmiter,
-		onClick: () => void
-	) {
-		super(container);
-		this._price = ensureElement<HTMLSpanElement>(
-			'.card__price',
-			this.container
-		);
-		this._title = ensureElement<HTMLSpanElement>(
-			'.card__title',
-			this.container
-		);
-		this._category = customeEnsureElement<HTMLSpanElement>(
-			'.card__category',
-			this.container
-		);
-		this._description = customeEnsureElement<HTMLSpanElement>(
-			'.card__text',
-			this.container
-		);
-		this._image = customeEnsureElement<HTMLImageElement>(
-			'.card__image',
-			this.container
-		);
-		this._index = customeEnsureElement<HTMLSpanElement>(
-			'.basket__item-index',
-			this.container
-		);
-		this._button =
-			customeEnsureElement<HTMLButtonElement>('button', this.container) ||
-			this.container;
-		this._button.addEventListener('click', onClick);
-	}
 }
