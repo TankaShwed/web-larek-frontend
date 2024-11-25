@@ -1,5 +1,7 @@
 # Проектная работа "Веб-ларек"
 
+Страница на GitHub Pages [ссылка](https://tankashwed.github.io/web-larek-frontend/).
+
 Стек: HTML, SCSS, TS, Webpack
 
 Структура проекта:
